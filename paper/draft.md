@@ -207,12 +207,31 @@ from_init (the final sub-step's increment exceeds what 3 ARAP iterations absorb)
 should scale with θ — a per-substep increment of ~10–15° (N = ⌈θ/15°⌉) follows from the
 onset table.
 
+**Cross-scene validation.** The full protocol (5 modes × 11 angles) was repeated on
+**hook** (forward-extended arm, rotation about the shoulder, axis X) and **mutant**
+(claw arm, axis Y); node edge stretch (region p95) at 90°/135°:
+
+| mode | jumpingjacks | hook | mutant |
+|---|---|---|---|
+| from_init (N=1) | 0.189 / 0.269 | 0.213 / 0.318 | 0.237 / 0.399 |
+| progressive N=4 | 0.140 / 0.207 | 0.169 / 0.228 | 0.177 / 0.258 |
+| progressive N=8 | 0.108 / 0.112 | 0.134 / 0.175 | 0.135 / 0.221 |
+| iterative (ref) | 0.074 / 0.072 | 0.088 / 0.125 | 0.109 / 0.157 |
+
+The ordering from_init > N=2 > N=4 > N=8 > iterative is strictly monotone in **every
+scene at every tested angle** (full table incl. N=2:
+results/failureA/cross_scene_summary.csv); at 90° N=8 closes 63% / 70% / 80% of the
+from_init→iterative gap on hook / jumpingjacks / mutant. Artifact *severity* is
+scene-dependent — Gaussian stretch p95 at 90° is 10.2 on jumpingjacks' thin arm but 1.6
+on mutant's thick claw — yet the mode ordering never inverts
+(results/failureA/cross_scene_curves.png).
+
 ## 9. Limitations
 
-- **Coverage**: one scene (jumpingjacks) and one drag protocol anchor the Failure-A and
-  improvement quantification; hook/mutant were reproduced but not edit-tested. The
-  protocol seeds (drag/anchor/rotation center) are single choices, though recorded and
-  reproducible.
+- **Coverage**: the Failure-A/improvement protocol is validated on three scenes
+  (jumpingjacks, hook, mutant — one limb and one drag protocol per scene, seeds recorded
+  in meta_*.json); Failure B's node-count sweep is jumpingjacks-only, and absolute
+  artifact severity varies substantially by limb geometry.
 - **Improvement scope**: progressive scheduling addresses only the initialization
   failure. The propagation-stage artifact (Sec. 6.1 secondary finding) and the
   high-node-count leakage (Sec. 6.2) are untouched; at ≥110° even N=8 fails. NUM_ITER=3
