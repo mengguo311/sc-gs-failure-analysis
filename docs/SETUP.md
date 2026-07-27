@@ -54,7 +54,16 @@ No system `nvcc` and no conda were present; both installed from scratch (2026-07
 
 ## Build errors encountered and fixes
 
-(recorded as they happen)
-
 - `conda create` produced no env on first run — cause: unaccepted channel ToS in conda 26.x; fix: `conda tos accept ...` (see step 1).
 - `curl` absent on the host — used `wget` instead.
+- **diff-gaussian-rasterization failed to compile** with
+  `error: namespace "std" has no member "uintptr_t"` / `identifier "uint32_t" is undefined`
+  in `cuda_rasterizer/rasterizer_impl.h`. Cause: gcc 13 no longer transitively includes
+  `<cstdint>`. Fix: add `#include <cstdint>` and `#include <cstddef>` to `rasterizer_impl.h`
+  (committed as a separate patch in the SC-GS working tree). After the patch both submodules
+  build cleanly for sm_75. `simple-knn` built without modification.
+- pytorch3d prebuilt wheel indexes for py39/torch2.4.x returned HTTP 403 → built
+  `pytorch3d==0.7.8` from source (`pip install --no-build-isolation git+...@V0.7.8`,
+  `MAX_JOBS=32`, ~40 CPU cores).
+- `torch 2.4.1` pulls in `numpy 2.0.2`; downgraded to `numpy==1.26.4` for compatibility with
+  the 2022-era SC-GS code (uses deprecated numpy aliases) before building anything against numpy.
