@@ -62,12 +62,15 @@ def select_group(tool, pcl, seed_point, n_rings):
     return idx
 
 
-def rotated_targets(pcl, drag_idx, angle_deg, axis):
-    """GUI set_rotation_delta: rotate drag group around its centroid (absolute targets)."""
+def rotated_targets(pcl, drag_idx, angle_deg, axis, center=None):
+    """GUI set_rotation_delta semantics: rotate drag group to absolute targets.
+    center=None rotates around the group centroid (GUI default); an explicit center
+    (e.g. the shoulder joint) emulates dragging a limb tip along the arc of a joint
+    rotation, leaving intermediate nodes free."""
     pts = pcl[drag_idx].cpu().numpy()
-    center = pts.mean(axis=0)
+    c = pts.mean(axis=0) if center is None else np.asarray(center, dtype=np.float64)
     rot = ScipyR.from_rotvec(np.radians(angle_deg) * np.asarray(axis) / np.linalg.norm(axis)).as_matrix()
-    return (pts - center) @ rot.T + center
+    return (pts - c) @ rot.T + c
 
 
 def edge_metrics(init_pcl, deformed, deformer, region_nodes):
@@ -150,6 +153,8 @@ def main():
                         help='"x,y,z" seed of a static anchor group (repeatable)')
     parser.add_argument('--n_rings', type=int, default=2, help='n-ring expansion (GUI default 2)')
     parser.add_argument('--rot_axis', type=str, default='0,0,1')
+    parser.add_argument('--rot_center', type=str, default='',
+                        help='"x,y,z" rotation center (default: drag-group centroid)')
     parser.add_argument('--angles', type=str, default='15,45,90,135')
     parser.add_argument('--edit_mode', type=str, default='from_init',
                         choices=['from_init', 'iterative', 'progressive'])
@@ -185,7 +190,7 @@ def main():
 
         tool, init_pcl = build_animate_tool(deform, args.edit_time)
 
-        if args.dump_nodes:
+        if getattr(args, 'dump_nodes', None):
             np.savez(args.dump_nodes, nodes=init_pcl.cpu().numpy())
             print(f'[dump] wrote {init_pcl.shape[0]} nodes at t={args.edit_time} to {args.dump_nodes}')
             return
@@ -210,6 +215,8 @@ def main():
 
         region_nodes = tool.add_n_ring_nbs(drag_idx, n=4)
         axis = [float(v) for v in args.rot_axis.split(',')]
+        rot_center = ([float(v) for v in args.rot_center.split(',')]
+                      if getattr(args, 'rot_center', '') else None)
         angles = [float(a) for a in args.angles.split(',')]
         cam_ids = [int(c) for c in args.cam_ids.split(',')]
         test_cams = scene.getTestCameras()
@@ -230,6 +237,7 @@ def main():
             'model_path': dataset.model_path, 'edit_time': args.edit_time,
             'drag_point': args.drag_point, 'anchor_points': args.anchor_point,
             'n_rings': args.n_rings, 'rot_axis': args.rot_axis,
+            'rot_center': args.rot_center or 'group_centroid',
             'drag_idx': drag_idx.tolist(), 'anchor_idx': anchor_idx.tolist(),
             'region_nodes': region_nodes.tolist(),
             'edit_mode': args.edit_mode, 'steps': args.steps, 'fine_step': args.fine_step,
@@ -249,15 +257,15 @@ def main():
 
         for angle in angles:
             if args.edit_mode == 'from_init':
-                schedule = [rotated_targets(init_pcl, drag_idx, angle, axis)]
+                schedule = [rotated_targets(init_pcl, drag_idx, angle, axis, rot_center)]
                 nsteps = 1
             elif args.edit_mode == 'iterative':
                 nsteps = max(1, int(round(angle / args.fine_step)))
-                schedule = [rotated_targets(init_pcl, drag_idx, angle * (k + 1) / nsteps, axis)
+                schedule = [rotated_targets(init_pcl, drag_idx, angle * (k + 1) / nsteps, axis, rot_center)
                             for k in range(nsteps)]
             else:  # progressive
                 nsteps = args.steps
-                schedule = [rotated_targets(init_pcl, drag_idx, angle * (k + 1) / nsteps, axis)
+                schedule = [rotated_targets(init_pcl, drag_idx, angle * (k + 1) / nsteps, axis, rot_center)
                             for k in range(nsteps)]
 
             deformed, trans_bias, solve_time = solve_schedule(

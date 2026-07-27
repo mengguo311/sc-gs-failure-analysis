@@ -26,7 +26,7 @@ Paper values from Tab. 1 of SC-GS (row "Ours", D-NeRF benchmark).
 
 | Scene | PSNR (paper) | PSNR (ours) | Δ | SSIM (paper) | SSIM (ours) | LPIPS (paper) | LPIPS (ours) |
 |---|---|---|---|---|---|---|---|
-| jumpingjacks | 41.13 | TODO | | .998 | TODO | .0067 | TODO |
+| jumpingjacks | 41.13 | **41.53** | +0.40 | .998 | .9975 | .0067 | .0058 |
 | hook | 39.87 | TODO | | .997 | TODO | .0076 | TODO |
 | mutant | 45.19 | TODO | | .999 | TODO | .0028 | TODO |
 
@@ -34,7 +34,7 @@ Paper values from Tab. 1 of SC-GS (row "Ours", D-NeRF benchmark).
 
 | Scene | Wall-clock (train) | Peak GPU mem | it/s (approx) |
 |---|---|---|---|
-| jumpingjacks | TODO | TODO | ~17-18 (RTX 5000) |
+| jumpingjacks | 3893 s (64.9 min) | 1472 MiB | ~17-18 (RTX 5000) |
 | hook | TODO | TODO | |
 | mutant | TODO | TODO | |
 

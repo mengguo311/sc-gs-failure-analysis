@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 def load_img(path):
     img = imageio.imread(path).astype(np.float32) / 255.0
-    return torch.from_numpy(img[..., :3]).permute(2, 0, 1)[None].cuda()
+    return torch.from_numpy(img[..., :3]).permute(2, 0, 1)[None].contiguous().cuda()
 
 
 def main():
