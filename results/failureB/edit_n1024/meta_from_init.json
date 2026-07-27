@@ -1,0 +1,48 @@
+{
+  "model_path": "outputs/jumpingjacks_n1024_node",
+  "edit_time": 0.0,
+  "drag_point": "0.6,0.0,0.85",
+  "anchor_points": [
+    "0.0,0.0,0.4",
+    "0.0,0.0,0.0"
+  ],
+  "n_rings": 1,
+  "rot_axis": "0,1,0",
+  "rot_center": "0.22,0.0,0.55",
+  "drag_idx": [
+    415,
+    490,
+    634,
+    781,
+    905
+  ],
+  "anchor_idx": [
+    47,
+    51,
+    296,
+    486,
+    631,
+    652,
+    746,
+    817,
+    976,
+    986
+  ],
+  "region_nodes": [
+    73,
+    381,
+    415,
+    475,
+    490,
+    529,
+    617,
+    634,
+    781,
+    905
+  ],
+  "edit_mode": "from_init",
+  "steps": 4,
+  "fine_step": 1.0,
+  "node_num": 1024,
+  "region_gs_count": 1101
+}

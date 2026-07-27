@@ -99,4 +99,59 @@ ground (Phase 3) is attractive.
 
 ## Failure B — Sensitivity to control point count
 
-(training sweep node_num ∈ {64, 128, 512, 1024, 2048} queued; results pending)
+### Protocol
+
+jumpingjacks retrained from scratch with node_num ∈ {64, 128, 512, 1024, 2048}, all other
+flags identical to Phase 1 (seed 0). Per model: (1) test-set metrics (`render.py`),
+(2) render FPS (`scripts/bench_fps.py`, 3 timed rounds over 20 test cams, GPU-synced),
+(3) the standard Failure-A shoulder-rotation edit at 45°/90° in both ARAP modes
+(`scripts/edit_headless.py`, same seed points), (4) off-region leakage computed from the
+saved node clouds (`results/failureB/leakage.csv`). Figure:
+`results/failureB/failureB_curves.png`; edit renders under `results/failureB/edit_n*/`.
+
+### Reconstruction quality and cost (test split)
+
+| node_num | PSNR | SSIM | LPIPS | render FPS | #Gaussians | train wall | peak GPU |
+|---|---|---|---|---|---|---|---|
+| 64 | 40.96 | .99735 | .00620 | 235.7 | 68.7k | 3866 s | 1404 MiB |
+| 128 | 40.85 | .99734 | .00729 | 233.7 | 67.9k | 3842 s | 1444 MiB |
+| 512 | **41.53** | .99752 | **.00580** | 212.2 | 71.0k | 3893 s | 1472 MiB |
+| 1024 | 41.30 | .99756 | .00602 | 193.6 | 72.3k | 3793 s | 1566 MiB |
+| 2048 | 41.33 | .99757 | .00634 | 169.4 | 72.1k | 3654 s | 1742 MiB |
+
+**Novel-view synthesis is remarkably insensitive to node count** (spread 0.7 dB over a
+32× sweep; 512 best but 64 loses only 0.6 dB). Training cost is flat; FPS drops 28%
+monotonically (deform-MLP + skinning cost). Within this range node count is *not* a
+reconstruction knob — its real effects are on editability:
+
+### Editing failure regime at the low extreme (64–128 nodes)
+
+At 90°, BOTH solver modes produce nearly identical, heavily distorted results
+(edge stretch region p95: 0.42 @64, 0.46–0.47 @128 — 6× the n512 iterative reference;
+visually the arm barely articulates and the sleeve smears). The failure is
+solver-independent: with ~64 nodes the drag group + free chain spans a handful of graph
+hops, deformation granularity is bounded by node spacing, and the limb cannot bend at the
+shoulder. Leakage is small (anchors dominate the tiny graph) — the failure is purely local.
+
+### Editing failure regime at the high extreme (2048 nodes)
+
+Two distinct failures:
+1. **Interactivity collapse**: one-shot from_init solve takes 3.0 s (25× the n512 cost);
+   the 90° iterative drag takes 200 s. The dense-graph solve (2048×2048 pseudo-inverse
+   least squares × 3 iterations × steps) is far past interactive rates.
+2. **Global leakage** (new metric): p95 displacement of nodes *outside* the drag region and
+   anchors reaches **1.26 scene units** for iterative @90° (body height ≈2 units) — the
+   legs are visibly ripped sideways (see `edit_n2048/renders/iterative_a090_cam0.png`)
+   while all *local* rigidity metrics stay moderate (the drift is smooth, so edge lengths
+   barely change — this is why the leakage metric is needed). Leakage grows monotonically
+   with node count (iterative @90° p95: 0.09 → 0.21 → 0.38 → 0.55 → 1.26) and is ~2×
+   worse in iterative than from_init at 2048: warm-start accumulation across 90 sub-steps
+   compounds the drift, whereas the stateless from_init solves once. **The preferable
+   solver mode inverts at the high extreme** — the mode that fixes Failure A (iterative)
+   is the one that fails here.
+
+### Summary
+
+Quality-vs-cost sweet spot confirms the paper's default (512, or 512–1024): below it,
+editing granularity fails; above it, editing latency and global leakage fail — while
+reconstruction quality never rewards more nodes in this range.
