@@ -52,6 +52,32 @@ from_init (the last sub-step's increment exceeds what the solver can absorb), so
 be chosen ∝ the requested angle; a simple adaptive rule (fix the per-substep increment at
 ~10–15°, N = ceil(θ/15°)) follows directly from the onset table.
 
+## Cross-scene validation (2026-07-28)
+
+The full protocol (5 modes × 11 angles) was repeated on **hook** (forward-extended arm
+rotated about the shoulder, axis X, render cam 17) and **mutant** (right claw arm rotated
+about the shoulder, axis Y, render cam 6); protocol seeds in
+`results/failureA/<scene>/meta_*.json`. The mode ordering is strictly monotone in every
+scene at every tested angle:
+
+edge stretch region p95 @90° / @135°:
+
+| mode | jumpingjacks | hook | mutant |
+|---|---|---|---|
+| from_init (N=1) | 0.189 / 0.269 | 0.213 / 0.318 | 0.237 / 0.399 |
+| progressive N=2 | 0.174 / 0.271 | 0.201 / 0.285 | 0.211 / 0.337 |
+| progressive N=4 | 0.140 / 0.207 | 0.169 / 0.228 | 0.177 / 0.258 |
+| progressive N=8 | 0.108 / 0.112 | 0.134 / 0.175 | 0.135 / 0.221 |
+| iterative (ref) | 0.074 / 0.072 | 0.088 / 0.125 | 0.109 / 0.157 |
+
+At 90°, N=8 closes 63% (hook), 70% (jumpingjacks), 80% (mutant) of the
+from_init→iterative gap at ≤0.75 s per drag. Artifact *severity* is scene-dependent
+(Gaussian stretch p95 @90°: jumpingjacks 10.2, hook 4.1, mutant 1.6 — thin limbs tear
+much worse than thick claws), but the ordering never inverts. Figures:
+`results/failureA/cross_scene_curves.png` + per-scene `failureA_curves.png` +
+`image_metrics.csv`. hook/mutant renders use a t=0-frontal camera chosen by scanning all
+20 test cams (the character orientation at t=0 differs from the test-set poses).
+
 **Limitation.** The improvement targets the initialization failure only; the
 propagation-stage artifact (supplementary centroid experiment, FAILURE_ANALYSIS.md) is
 untouched, and at very large angles (≥110°) even N=8 has entered its failure regime.
