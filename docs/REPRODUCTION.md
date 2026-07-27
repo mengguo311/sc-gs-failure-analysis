@@ -39,7 +39,20 @@ Paper values from Tab. 1 of SC-GS (row "Ours", D-NeRF benchmark).
 | mutant | 3809 s (63.5 min) | 2082 MiB | |
 
 All three scenes reproduce within ±0.5 dB of the paper (jumpingjacks +0.40, hook −0.13,
-mutant −0.16) — no investigation flag triggered. LPIPS matches to the 3rd decimal on
+mutant −0.16) — no investigation flag triggered.
+
+### Additional scenes (trained for cross-scene improvement validation, 2026-07-28)
+
+| Scene | PSNR (paper) | PSNR (ours) | Δ | SSIM (paper/ours) | LPIPS (paper/ours) | train / GPU |
+|---|---|---|---|---|---|---|
+| standup | 47.89 | 47.51 | −0.38 | .999 / .9991 | .0023 / .0025 | 3930 s / 3092 MiB |
+| trex | 41.24 | 40.68 | −0.56 | .998 / .9985 | .0046 / .0038 | 3933 s / 2072 MiB |
+
+trex exceeds the 0.5 dB flag: brief investigation — best test PSNR during training was
+40.86 (final-iteration eval 40.68, i.e. ~0.2 dB is checkpoint selection); SSIM matches
+and LPIPS is *better* than the paper (.0038 vs .0046). trex has the most thin structures
+(ribs) of the D-NeRF set; residual −0.38 dB at best checkpoint is consistent with
+densification run-to-run variance, not a systematic setup error. LPIPS matches to the 3rd decimal on
 mutant and jumpingjacks; hook's small PSNR/LPIPS gap is within run-to-run noise for 3DGS
 pipelines (densification is nondeterministic at the margin even with fixed seeds due to
 atomics in the rasterizer).

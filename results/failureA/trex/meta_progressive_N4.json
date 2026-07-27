@@ -1,0 +1,51 @@
+{
+  "model_path": "outputs/trex_n512_node",
+  "edit_time": 0.0,
+  "drag_point": "0.0,0.95,0.28",
+  "anchor_points": [
+    "0.0,-0.1,0.45",
+    "0.0,-0.6,0.65"
+  ],
+  "n_rings": 1,
+  "rot_axis": "0,0,1",
+  "rot_center": "0.0,0.45,0.35",
+  "drag_idx": [
+    1,
+    37,
+    132,
+    456,
+    503
+  ],
+  "anchor_idx": [
+    76,
+    116,
+    117,
+    119,
+    215,
+    223,
+    339,
+    355,
+    372,
+    457
+  ],
+  "region_nodes": [
+    1,
+    11,
+    37,
+    115,
+    124,
+    130,
+    132,
+    338,
+    351,
+    453,
+    456,
+    459,
+    503
+  ],
+  "edit_mode": "progressive",
+  "steps": 4,
+  "fine_step": 1.0,
+  "node_num": 512,
+  "region_gs_count": 6040
+}

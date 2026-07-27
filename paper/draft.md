@@ -207,24 +207,36 @@ from_init (the final sub-step's increment exceeds what 3 ARAP iterations absorb)
 should scale with θ — a per-substep increment of ~10–15° (N = ⌈θ/15°⌉) follows from the
 onset table.
 
-**Cross-scene validation.** The full protocol (5 modes × 11 angles) was repeated on
-**hook** (forward-extended arm, rotation about the shoulder, axis X) and **mutant**
-(claw arm, axis Y); node edge stretch (region p95) at 90°/135°:
+**Cross-scene validation.** The full protocol (5 modes × 11 angles) was repeated on four
+more scenes, each with its own limb and rotation joint: **hook** (forward arm, axis X),
+**mutant** (claw arm, axis Y), **standup** (crouched forward arm, axis X; trained for
+this validation, reproduces at 47.51 dB vs paper 47.89), and **trex** (long thin tail
+swung sideways about its root, axis Z; 40.68 dB vs 41.24 — see REPRODUCTION.md for the
+brief investigation of this −0.56 dB gap). Node edge stretch (region p95) at 90°/135°:
 
-| mode | jumpingjacks | hook | mutant |
-|---|---|---|---|
-| from_init (N=1) | 0.189 / 0.269 | 0.213 / 0.318 | 0.237 / 0.399 |
-| progressive N=4 | 0.140 / 0.207 | 0.169 / 0.228 | 0.177 / 0.258 |
-| progressive N=8 | 0.108 / 0.112 | 0.134 / 0.175 | 0.135 / 0.221 |
-| iterative (ref) | 0.074 / 0.072 | 0.088 / 0.125 | 0.109 / 0.157 |
+![Cross-scene curves](figures/cross_scene_curves.png)
+*Figure 5: edge-stretch vs angle for all five scenes.*
 
-The ordering from_init > N=2 > N=4 > N=8 > iterative is strictly monotone in **every
-scene at every tested angle** (full table incl. N=2:
-results/failureA/cross_scene_summary.csv); at 90° N=8 closes 63% / 70% / 80% of the
-from_init→iterative gap on hook / jumpingjacks / mutant. Artifact *severity* is
-scene-dependent — Gaussian stretch p95 at 90° is 10.2 on jumpingjacks' thin arm but 1.6
-on mutant's thick claw — yet the mode ordering never inverts
-(results/failureA/cross_scene_curves.png).
+| mode | jumpingjacks | hook | mutant | standup | trex |
+|---|---|---|---|---|---|
+| from_init (N=1) | 0.189 / 0.269 | 0.213 / 0.318 | 0.237 / 0.399 | 0.362 / 0.439 | 0.285 / 0.410 |
+| progressive N=4 | 0.140 / 0.207 | 0.169 / 0.228 | 0.177 / 0.258 | 0.310 / 0.389 | 0.285 / 0.391 |
+| progressive N=8 | 0.108 / 0.112 | 0.134 / 0.175 | 0.135 / 0.221 | 0.261 / 0.307 | 0.267 / 0.371 |
+| iterative (ref) | 0.074 / 0.072 | 0.088 / 0.125 | 0.109 / 0.157 | 0.165 / 0.181 | 0.244 / 0.342 |
+
+N=8 closes 70% / 63% / 80% / 51% / 44% of the from_init→iterative gap at 90° on the five
+scenes (full table incl. N=2: results/failureA/cross_scene_summary.csv). On four scenes
+the ordering from_init > N=2 > N=4 > N=8 > iterative is strictly monotone at every
+tested angle. **trex is the honest hard case**: the visual tail-shortening of from_init
+is obvious and N=4/8 restore the smooth arc (image PSNR vs reference @90°: 24.7 → 27.7
+dB, LPIPS 0.039 → 0.018), but node-level differences compress — N=2 is
+indistinguishable from from_init (its 45–67° sub-steps already exceed the per-step
+failure level), and even the reference is stressed (the tail is one long elastic chain
+far from every anchor). Progressive scheduling helps everywhere but is not a silver
+bullet on extreme kinematic chains; N must scale with drag difficulty. Artifact
+*severity* is scene-dependent (Gaussian stretch p95 @90°: 10.2 on jumpingjacks' thin
+arm, 1.6 on mutant's thick claw) yet the ordering never inverts on any scene at any
+angle except the trex N=2 case noted.
 
 ## 9. Limitations
 

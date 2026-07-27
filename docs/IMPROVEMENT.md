@@ -78,6 +78,30 @@ much worse than thick claws), but the ordering never inverts. Figures:
 `image_metrics.csv`. hook/mutant renders use a t=0-frontal camera chosen by scanning all
 20 test cams (the character orientation at t=0 differs from the test-set poses).
 
+### Second round: standup (arm) and trex (tail), 2026-07-28
+
+Two more scenes were trained (see REPRODUCTION.md) and put through the identical
+protocol. **standup** (crouched figure, forward-reaching arm rotated about the shoulder,
+axis X, cam 7): clean monotone ordering — edge region p95 @90°: 0.362 (from_init) →
+0.344 / 0.310 / 0.261 (N=2/4/8) → 0.165 (reference); N=8 closes 51% of the gap; image
+PSNR-vs-reference @45°: 26.9 → 29.8 dB (N=8).
+
+**trex** (long thin tail swung sideways about its root, axis Z, cam 3) is the **hardest
+and most nuanced case**: the visual shortening artifact of from_init is clearly visible
+on the tail, and N=4/8 restore the smooth long arc (image PSNR @90°: 24.7 → 25.0 → 27.7;
+LPIPS 0.039 → 0.036 → 0.018), but node-level *edge* differences are compressed
+(@90°: 0.285 from_init vs 0.244 reference; N=2 statistically indistinguishable from
+from_init, 0.295) and even the reference is visibly stressed (gs p95 4.3 @135°). The
+tail is a single long elastic chain far from both anchors — every solver mode struggles,
+and per-substep increments must be small before warm-starting pays off (N=2's 45–67°
+sub-steps are already past the per-step failure level, hence no gain). Honest summary:
+progressive scheduling **helps everywhere but is not a silver bullet on extreme
+kinematic chains**; N must scale with the difficulty of the drag, and the propagation
+stage remains a bottleneck (consistent with the Failure-A secondary finding).
+
+Cross-scene gap closure by N=8 at 90° (edge region p95): jumpingjacks 70%, hook 63%,
+mutant 80%, standup 51%, trex 44%.
+
 **Limitation.** The improvement targets the initialization failure only; the
 propagation-stage artifact (supplementary centroid experiment, FAILURE_ANALYSIS.md) is
 untouched, and at very large angles (≥110°) even N=8 has entered its failure regime.
