@@ -33,9 +33,19 @@ Reproduction, controlled failure analysis, and an improvement of
 
 ## Setup
 
-See `docs/SETUP.md` for the full record (Ubuntu 24.04, CUDA 12.4, Python 3.9,
-torch 2.4.1+cu124, pytorch3d 0.7.8 from source, gcc-13 `<cstdint>` patch for the
-rasterizer). Data: D-NeRF `data.zip` (link in SC-GS README) extracted to `data/<scene>`.
+```bash
+bash scripts/setup_upstream.sh    # clones pinned SC-GS + applies the gcc-13 build patch
+# then follow docs/SETUP.md for the conda environment
+```
+
+`scripts/setup_upstream.sh` clones the official SC-GS at the commit used for every
+result here and applies `patches/diff-gaussian-rasterization-gcc13.patch` (gcc ≥ 13
+no longer transitively includes `<cstdint>`, so the CUDA rasterizer fails to build
+without it). The upstream tree is deliberately **not** vendored into this repository.
+
+Full environment record in `docs/SETUP.md` (Ubuntu 24.04, CUDA 12.4, Python 3.9,
+torch 2.4.1+cu124, pytorch3d 0.7.8 built from source). Data: D-NeRF `data.zip`
+(link in the SC-GS README) extracted to `data/<scene>`.
 
 ## Reproducing every table / figure
 
