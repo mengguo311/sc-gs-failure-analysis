@@ -29,3 +29,4 @@ GPU is always Quadro RTX 5000; seed is always 0 (fixed by upstream `safe_state`)
 | 22 | 2026-07-28 | 5-scene cross summary + figures | scripts/cross_scene_summary.py | results/failureA/cross_scene_{summary.csv,curves.png} | N8 gap closure @90°: 70/63/80/51/44% |
 | 23 | 2026-07-28 | Academic paper figures (schematic, onset/gap-closure/trade-off, 2-scene qualitative) | scripts/paper_figures.py | paper/figures/fig_*.png | 3 new publication figures |
 | 24 | 2026-07-28 | Full academic paper written (abstract, intro, related work, failure study, method, 5-scene experiments, discussion) | paper/paper.md + paper/paper.html | paper/ | 8 figures, 4 tables, 13 references |
+| 25 | 2026-07-28 | LaTeX paper (paper.tex) compiled to 9-page two-column PDF via tectonic | paper/paper.tex, paper/paper.pdf | paper/ | 8 figures, 4 tables, algorithm block, 13 refs |
