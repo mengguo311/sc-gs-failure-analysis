@@ -66,33 +66,24 @@ Large-Rotation Editing Failures in Sparse-Controlled Gaussian Splatting}
 \maketitle
 \begin{abstract}
 \noindent
-Sparse-Controlled Gaussian Splatting (SC-GS) couples dense 3D Gaussians with a
-sparse set of learned control points, enabling both high-fidelity dynamic
-novel-view synthesis and interactive motion editing through as-rigid-as-possible
-(ARAP) deformation of the control graph. We present a systematic empirical study
-of when and why this editing pipeline fails. First, we show that the default
-editing mode, which initializes every ARAP solve from a linear Laplacian-editing
-solution, collapses for rotational drags beyond 45--60$^\circ$: the
-rotation-blind initialization produces the classical chord-shortcut artifact,
-and the fixed budget of three local-global iterations cannot recover from it,
-yielding under-rotated, shortened limbs and torn Gaussian layouts. Second, we
-identify two further failure axes: an initialization-independent artifact in the
-rotation re-estimation stage that propagates node motion to Gaussians, and a
-strong sensitivity of \emph{editability} --- but not reconstruction quality ---
-to the number of control points, including a previously unreported global
-``leakage'' failure at high control-point counts that local rigidity metrics
-cannot detect. Motivated by this analysis, we propose \emph{progressive drag
-scheduling}: a requested drag is subdivided into $N$ sub-steps along the target
-trajectory, and each sub-step's ARAP solve is warm-started from the previous
-solution. The method is a pure scheduling change --- it requires no modification
-of the trained model or the solver --- yet it extends the failure-onset angle
-from 45--60$^\circ$ to 90--110$^\circ$ ($N{=}8$) at under 0.8\,s per drag,
-16$\times$ faster than the robust-but-slow incremental reference mode. Across
-eight D-NeRF scenes spanning organic limbs, a mechanical hinge, an extreme
-kinematic chain, and a free body, progressive scheduling closes 43--80\% of
-the rigidity gap between the original and reference modes, with monotone
-improvement in the schedule length on nearly every scene and angle. All
-results are reproducible from committed scripts, metrics, and protocol seeds.
+Sparse-Controlled Gaussian Splatting (SC-GS) drives dense 3D Gaussians with a
+few hundred learned control points, making a dynamic scene both renderable from
+novel views and editable through as-rigid-as-possible (ARAP) deformation of the
+control graph. We ask when that editing breaks. Its default mode initializes
+every ARAP solve from a linear Laplacian solution, which cannot represent
+rotation; with a fixed budget of three local-global iterations it never
+recovers, and rotational drags beyond 45--60$^\circ$ collapse into
+under-rotated, shortened limbs and torn Gaussian layouts. We identify two
+further failure axes: an initialization-independent artifact in the rotation
+re-estimation that transfers node motion to the Gaussians, and a sensitivity of
+\emph{editability} --- but not reconstruction quality --- to control-point
+count, including a global ``leakage'' failure that local rigidity metrics
+cannot detect. Our remedy, \emph{progressive drag scheduling}, subdivides a drag
+into $N$ sub-steps and warm-starts each solve from the previous one. Retraining
+nothing and touching no solver code, it moves the failure onset to
+90--110$^\circ$ ($N{=}8$) at under 0.8\,s per drag --- 16$\times$ cheaper than
+SC-GS's robust-but-slow alternative --- and closes 43--80\% of the rigidity gap
+across eight D-NeRF scenes.
 
 \vspace{0.6em}
 \noindent\textbf{Keywords:} dynamic scene reconstruction; 3D Gaussian splatting;
