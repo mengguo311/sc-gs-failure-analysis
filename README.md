@@ -10,21 +10,29 @@ Reproduction, controlled failure analysis, and an improvement of
 [official repo](https://github.com/yihua7/SC-GS)) on the D-NeRF dataset.
 
 **Headline results**
-- Reproduction: 3/3 scenes within ±0.5 dB of the paper (jumpingjacks 41.53 vs 41.13).
-- Failure A: the GUI-default `arap_from_init` editing mode collapses for rotational drags
-  beyond **45–60°** (limb shortening, Gaussian shredding); the `arap_iterative` reference
-  survives 135° at 100× the solve cost.
-- Failure B: reconstruction quality is *flat* across node_num 64→2048 (0.7 dB), but
-  editing fails at both extremes — articulation failure below 128, latency (200 s/drag) +
-  off-region leakage (legs ripped by an arm drag) at 2048.
+- Reproduction: 8 scenes trained; of the 7 with published SC-GS values, 5 land within
+  ±0.5 dB (jumpingjacks 41.53 vs 41.13) and the two larger gaps are investigated and
+  documented rather than hidden.
+- Failure I: the shipped `arap_from_init` editing mode collapses for rotational drags
+  beyond **45–60°** (limb under-rotation, shortening, Gaussian shredding), because its
+  linear Laplacian initialization cannot represent rotation and only 3 ARAP iterations
+  follow; `arap_iterative` survives 135° at ~100× the solve cost.
+- Failure II: an initialization-independent artifact in the rotation re-estimation stage
+  tears limbs past ~75° in *both* modes.
+- Failure III: reconstruction quality is *flat* across node_num 64→2048 (0.7 dB), but
+  editing fails at both extremes — articulation failure below 128; at 2048, latency
+  (200 s/drag) plus off-region **leakage** (legs displaced 1.26 scene units by an arm
+  drag) that local rigidity metrics cannot detect.
 - Improvement: **progressive drag scheduling** (N warm-started sub-steps) pushes the
-  failure onset 60°→110° (N=8) at ≤0.8 s per drag, zero upstream code changes.
+  failure onset 45–60° → 90–110° (N=8) at ≤0.8 s per drag, closing 43–80% of the
+  original→reference gap across eight scenes, with zero upstream code changes.
 
 ## Repository structure
 
 ```
 ├── README.md               this file
-├── SC-GS/                  upstream code (branch course-project; gcc-13 build fix only)
+├── patches/                the one upstream build fix we needed (gcc-13 <cstdint>)
+├── scripts/setup_upstream.sh   clones pinned SC-GS and applies that patch
 ├── scripts/                one script per experiment (see below)
 ├── results/                committed metrics CSVs + figures + edit renders
 │   ├── failureA/           rotation-failure study (+ _centroid supplementary)
