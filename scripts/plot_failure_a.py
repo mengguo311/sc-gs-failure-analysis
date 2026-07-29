@@ -5,20 +5,16 @@ Writes failureA_curves.png (3 panels: edge stretch p95, gaussian stretch p95 (lo
 PSNR vs reference) into --dir.
 """
 import os
+import sys
 import argparse
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ORDER = ['from_init', 'progressive_N2', 'progressive_N4', 'progressive_N8', 'iterative']
-LABEL = {'from_init': 'from_init (N=1, GUI default)',
-         'progressive_N2': 'progressive N=2 (ours)',
-         'progressive_N4': 'progressive N=4 (ours)',
-         'progressive_N8': 'progressive N=8 (ours)',
-         'iterative': 'iterative 1°/step (reference)'}
-COLOR = {'from_init': '#d62728', 'progressive_N2': '#ff9896', 'progressive_N4': '#ff7f0e',
-         'progressive_N8': '#2ca02c', 'iterative': '#1f77b4'}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fig_style import LABEL, COLOR, ORDER, apply_style
+apply_style()
 
 
 def main():

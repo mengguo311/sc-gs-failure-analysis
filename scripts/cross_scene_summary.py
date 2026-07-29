@@ -6,25 +6,29 @@ results/failureA/cross_scene_curves.png.
 
 Usage: python scripts/cross_scene_summary.py --scenes jumpingjacks hook mutant [...]
 """
+import os
+import sys
 import argparse
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ORDER = ['from_init', 'progressive_N2', 'progressive_N4', 'progressive_N8', 'iterative']
-LABEL = {'from_init': 'from_init (N=1)', 'progressive_N2': 'progressive N=2',
-         'progressive_N4': 'progressive N=4', 'progressive_N8': 'progressive N=8',
-         'iterative': 'iterative (ref)'}
-COLOR = {'from_init': '#d62728', 'progressive_N2': '#ff9896', 'progressive_N4': '#ff7f0e',
-         'progressive_N8': '#2ca02c', 'iterative': '#1f77b4'}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fig_style import LABEL, COLOR, ORDER, apply_style
+apply_style()
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--scenes', nargs='+', default=['jumpingjacks', 'hook', 'mutant'])
 args = ap.parse_args()
 
 rows = []
-fig, axes = plt.subplots(1, len(args.scenes), figsize=(5.2 * len(args.scenes), 4.4), squeeze=False)
+ncols = min(4, len(args.scenes))
+nrows = (len(args.scenes) + ncols - 1) // ncols
+fig, axes_grid = plt.subplots(nrows, ncols, figsize=(4.6 * ncols, 4.1 * nrows), squeeze=False)
+axes = [[axes_grid[i // ncols][i % ncols] for i in range(len(args.scenes))]]
+for i in range(len(args.scenes), nrows * ncols):
+    axes_grid[i // ncols][i % ncols].axis('off')
 for ci, scene in enumerate(args.scenes):
     df = pd.read_csv(f'results/failureA/{scene}/metrics.csv')
     df['key'] = df['mode'] + df['tag'].fillna('').astype(str)
@@ -45,9 +49,11 @@ for ci, scene in enumerate(args.scenes):
                              'arap_error': r['arap_error'].iloc[0],
                              'solve_time_s': r['solve_time_s'].iloc[0]})
     ax.set_title(scene)
-    ax.set_xlabel('drag rotation angle (deg)')
-    if ci == 0:
+    if ci // ncols == nrows - 1 or ci + ncols >= len(args.scenes):
+        ax.set_xlabel('drag rotation angle (deg)')
+    if ci % ncols == 0:
         ax.set_ylabel('node edge stretch, region p95')
+    if ci == 0:
         ax.legend(fontsize=8)
     ax.grid(alpha=.3)
 plt.tight_layout()

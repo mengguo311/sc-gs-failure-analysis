@@ -9,10 +9,15 @@ Reads results/failureB/{fps.csv,leakage.csv,edit_n*/metrics.csv} + hardcoded PSN
 Writes results/failureB/failureB_curves.png.
 """
 import os
+import sys
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fig_style import LABEL, apply_style
+apply_style()
 
 NN = [64, 128, 512, 1024, 2048]
 # test PSNR from outputs/jumpingjacks_n*_eval.log (iteration 80000)
@@ -44,7 +49,7 @@ ax.set_title('(a) Reconstruction quality & render speed')
 ax = axes[1]
 for mode, c in [('iterative', '#1f77b4'), ('from_init', '#d62728')]:
     sub = edit[(edit['mode'] == mode) & (edit['angle'] == 90.0)].sort_values('node_num')
-    ax.plot(sub['node_num'], sub['edge_stretch_region_p95'], 'o-', color=c, label=mode)
+    ax.plot(sub['node_num'], sub['edge_stretch_region_p95'], 'o-', color=c, label=LABEL[mode])
 ax.set_xscale('log', base=2); ax.set_xticks(NN); ax.set_xticklabels(NN)
 ax.set_xlabel('node_num'); ax.set_ylabel('edge stretch region p95 @90° drag')
 ax.set_title('(b) Edit local rigidity violation')
@@ -53,7 +58,7 @@ ax.grid(alpha=.3); ax.legend()
 ax = axes[2]
 for mode, c in [('iterative', '#1f77b4'), ('from_init', '#d62728')]:
     sub = leak[(leak['mode'] == mode) & (leak['angle'] == 90)].sort_values('node_num')
-    ax.plot(sub['node_num'], sub['leak_p95'], 'o-', color=c, label=mode)
+    ax.plot(sub['node_num'], sub['leak_p95'], 'o-', color=c, label=LABEL[mode])
 ax.set_xscale('log', base=2); ax.set_xticks(NN); ax.set_xticklabels(NN)
 ax.set_xlabel('node_num'); ax.set_ylabel('off-region node displacement p95 @90°')
 ax.set_title('(c) Edit leakage outside the drag region')
@@ -62,7 +67,7 @@ ax.grid(alpha=.3); ax.legend()
 ax = axes[3]
 for mode, c in [('iterative', '#1f77b4'), ('from_init', '#d62728')]:
     sub = edit[(edit['mode'] == mode) & (edit['angle'] == 90.0)].sort_values('node_num')
-    ax.semilogy(sub['node_num'], sub['solve_time_s'], 'o-', color=c, label=mode)
+    ax.semilogy(sub['node_num'], sub['solve_time_s'], 'o-', color=c, label=LABEL[mode])
 ax.set_xscale('log', base=2); ax.set_xticks(NN); ax.set_xticklabels(NN)
 ax.axhline(1.0, color='gray', ls='--', lw=1)
 ax.text(70, 1.15, 'interactivity threshold (1 s)', fontsize=8, color='gray')

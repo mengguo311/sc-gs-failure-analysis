@@ -11,6 +11,15 @@
 \usepackage[font=small,labelfont=bf]{caption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+% Coherent, compact heading hierarchy: 12pt sections, 10pt bold subsections,
+% run-in paragraph heads — no jumps in visual weight.
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\paragraph}[runin]{\normalsize\bfseries}{}{0em}{}[.]
+\titlespacing*{\section}{0pt}{1.1em plus 0.3em}{0.5em}
+\titlespacing*{\subsection}{0pt}{0.9em plus 0.2em}{0.4em}
+\titlespacing*{\paragraph}{0pt}{0.7em plus 0.2em}{0.5em}
 \usepackage[colorlinks=true,linkcolor=blue!60!black,citecolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
 
 \graphicspath{{figures/}}
@@ -18,6 +27,13 @@
 
 \newcommand{\fromInit}{\texttt{arap\_from\_init}}
 \newcommand{\iterMode}{\texttt{arap\_iterative}}
+% Contrastive naming used in all figures, tables, and text:
+%   "SC-GS (original)"  = the original paper's default one-shot editing mode (arap_from_init)
+%   "Ours (N=k)"        = progressive drag scheduling with k sub-steps
+%   "SC-GS iterative"   = the original slow incremental mode, used as robustness reference
+\newcommand{\scgsOrig}{SC-GS (original)}
+\newcommand{\ours}[1]{Ours ($N{=}#1$)}
+\newcommand{\scgsIter}{SC-GS iterative}
 \newcommand{\eg}{\emph{e.g.}}
 \newcommand{\ie}{\emph{i.e.}}
 
@@ -59,9 +75,9 @@ solution. The method is a pure scheduling change --- it requires no modification
 of the trained model or the solver --- yet it extends the failure-onset angle
 from 45--60$^\circ$ to 90--110$^\circ$ ($N{=}8$) at under 0.8\,s per drag,
 16$\times$ faster than the robust-but-slow incremental reference mode. Across
-five D-NeRF scenes with distinct limb geometries, progressive scheduling closes
-44--80\% of the rigidity gap between the default and reference modes, with
-strictly monotone improvement in the schedule length on four of five scenes. All
+D-NeRF scenes with distinct limb geometries, progressive scheduling closes
+43--80\% of the rigidity gap between the original and reference modes, with
+strictly monotone improvement in the schedule length on almost all scenes. All
 results are reproducible from committed scripts, metrics, and protocol seeds.
 \end{abstract}
 \vspace{1.2em}
@@ -211,13 +227,17 @@ fitting of $\mathbf{R}_i$ alternating with a linear solve for $\mathbf{p}'$
 --- but runs only $\mathrm{NUM\_ITER}=3$ iterations per call. Two GUI modes
 differ \emph{only in initialization} (\texttt{train\_gui.py:768--777}):
 \begin{itemize}\itemsep1pt
-  \item \fromInit{} (default): every solve starts from the linear
+  \item \fromInit{} (default; hereafter ``\textbf{\scgsOrig{}}'', the baseline
+        our method improves upon): every solve starts from the linear
         Laplacian-editing least-squares solution
         $\mathbf{p}'^{(0)} = \arg\min_{\mathbf{p}'}
         \lVert \mathbf{L}\mathbf{p}' - \mathbf{L}\mathbf{p} \rVert^2$
         s.t.\ handles (\texttt{arap\_deform.py:103});
-  \item \iterMode{}: every solve warm-starts from the previous drag event's
-        solution (\texttt{init\_verts}).
+  \item \iterMode{} (hereafter ``\textbf{\scgsIter{}}''): every solve
+        warm-starts from the previous drag event's solution
+        (\texttt{init\_verts}); robust but ${\sim}100\times$ slower over a
+        large drag, and stateful. We use it as the robustness
+        \emph{reference}, not as a practical competitor.
 \end{itemize}
 
 \paragraph{Propagation.}
@@ -280,13 +300,14 @@ serialized to JSON alongside the committed metric CSVs.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{failureA_curves.png}
-  \caption{\textbf{\texttt{jumpingjacks}, shoulder-rotation drags.}
-  (a)~Node-graph rigidity violation vs.\ drag angle. (b)~Gaussian-level tearing
-  after LBS propagation (log scale); the dashed line marks the level at which
-  artifacts are clearly visible. (c)~Image deviation from the reference mode.
-  The default mode (red) departs from the reference (blue) between 45$^\circ$
-  and 60$^\circ$; progressive schedules (\S\ref{sec:method}) interpolate
-  monotonically.}
+  \caption{\textbf{Original SC-GS vs.\ our method under shoulder-rotation
+  drags} (\texttt{jumpingjacks}). (a)~Node-graph rigidity violation vs.\ drag
+  angle. (b)~Gaussian-level tearing after LBS propagation (log scale); the
+  dashed line marks the level at which artifacts are clearly visible.
+  (c)~Image deviation from the reference. \scgsOrig{} (red) departs from the
+  slow reference (blue) between 45$^\circ$ and 60$^\circ$; our progressive
+  schedules (pink/orange/green, \S\ref{sec:method}) recover monotonically
+  toward the reference as $N$ grows, at a fraction of its cost.}
   \label{fig:failureA}
 \end{figure*}
 
@@ -297,7 +318,7 @@ $1.70 \rightarrow 9.98$ while the reference stays below $0.3$ --- a six-fold
 discontinuity that localizes the \textbf{failure onset to 45--60$^\circ$}. At
 135$^\circ$ the node edge stretch reaches $3.8\times$ the reference (0.269 vs.\
 0.072) and the ARAP energy is doubled (0.093 vs.\ 0.048). Visually
-(Fig.~\ref{fig:beforeafter}, row~2) the limb \emph{under-rotates} --- at
+(Fig.~\ref{fig:beforeafter}, top row) the limb \emph{under-rotates} --- at
 90--135$^\circ$ the arm remains near-horizontal instead of following the arc
 --- \emph{shortens} toward the chord, and the hand \emph{shreds} into a blob of
 disconnected Gaussians.
@@ -493,14 +514,16 @@ trained models reproduce the paper.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{fig_onset_gapclosure.png}
-  \caption{\textbf{Main quantitative results.} (a)~Failure-onset angle grows
-  with schedule length $N$ (bars: onset interval from the angle sweep).
-  (b)~Fraction of the default$\rightarrow$reference rigidity gap closed at a
+  \caption{\textbf{How far our method moves SC-GS toward its robustness upper
+  bound.} (a)~Failure-onset angle grows with schedule length $N$: from
+  45--60$^\circ$ for \scgsOrig{} to 90--110$^\circ$ for \ours{8} (bars: onset
+  interval from the angle sweep). (b)~Fraction of the
+  original$\rightarrow$reference rigidity gap closed by our method at a
   90$^\circ$ drag, per scene (edge-stretch region p95; \texttt{trex} $N{=}4$
-  closes 0\% on this node-level metric --- but see \S\ref{sec:hardcase} and the
-  image-level metrics). (c)~The robustness--latency plane at 90$^\circ$:
-  progressive schedules populate the previously empty region between the two
-  built-in modes, below the 1\,s interactivity threshold.}
+  closes 0\% on this node-level metric --- but see \S\ref{sec:hardcase} and
+  the image-level metrics). (c)~The robustness--latency plane at 90$^\circ$:
+  our schedules populate the previously empty region between the two original
+  SC-GS modes, below the 1\,s interactivity threshold.}
   \label{fig:onset}
 \end{figure*}
 
@@ -517,11 +540,11 @@ trained models reproduce the paper.
     \begin{tabular}{@{}c@{}}ARAP\\@135$^\circ$\end{tabular} &
     \begin{tabular}{@{}c@{}}solve\\@135$^\circ$\end{tabular} \\
     \midrule
-    \fromInit{} ($N{=}1$) & 45--60$^\circ$ & 0.269 & 0.093 & 0.11\,s \\
-    progressive $N{=}2$  & 45--60$^\circ$ & 0.271 & 0.091 & 0.21\,s \\
-    progressive $N{=}4$  & 60--75$^\circ$ & 0.207 & 0.073 & 0.39\,s \\
-    progressive $N{=}8$  & \textbf{90--110$^\circ$} & 0.112 & 0.051 & 0.76\,s \\
-    \iterMode{} (ref)    & $\geq$135$^\circ$ & 0.072 & 0.048 & 12.34\,s \\
+    \scgsOrig{}          & 45--60$^\circ$ & 0.269 & 0.093 & 0.11\,s \\
+    \ours{2}             & 45--60$^\circ$ & 0.271 & 0.091 & 0.21\,s \\
+    \ours{4}             & 60--75$^\circ$ & 0.207 & 0.073 & 0.39\,s \\
+    \ours{8}             & \textbf{90--110$^\circ$} & 0.112 & 0.051 & 0.76\,s \\
+    \scgsIter{} (slow ref.) & $\geq$135$^\circ$ & 0.072 & 0.048 & 12.34\,s \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -541,11 +564,11 @@ increment at 10--15$^\circ$).
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{before_after_grid.png}
-  \caption{\textbf{Qualitative before/after on \texttt{jumpingjacks}}
-  (45$^\circ$/90$^\circ$/135$^\circ$). Top to bottom: reference, default mode,
-  progressive $N{=}4$, $N{=}8$. The default mode's arm under-rotates and its
-  hand shreds from 60$^\circ$; $N{=}8$ tracks the reference through
-  90$^\circ$.}
+  \caption{\textbf{Original SC-GS vs.\ our method, qualitative before/after}
+  (\texttt{jumpingjacks}, 45$^\circ$/90$^\circ$/135$^\circ$). Top to bottom:
+  \scgsOrig{}, \ours{4}, \ours{8}, \scgsIter{} (reference). The original
+  mode's arm under-rotates and its hand shreds from 60$^\circ$; \ours{8}
+  tracks the reference through 90$^\circ$ at 1/16 of its cost.}
   \label{fig:beforeafter}
 \end{figure}
 
@@ -562,11 +585,11 @@ increment at 10--15$^\circ$).
     \toprule
     mode & jumpingjacks & hook & mutant & standup & trex \\
     \midrule
-    \fromInit{} ($N{=}1$) & .189 / .269 & .213 / .318 & .237 / .399 & .362 / .439 & .285 / .410 \\
-    progressive $N{=}2$   & .174 / .271 & .201 / .285 & .211 / .337 & .344 / .409 & .295 / .421 \\
-    progressive $N{=}4$   & .140 / .207 & .169 / .228 & .177 / .258 & .310 / .389 & .285 / .391 \\
-    progressive $N{=}8$   & .108 / .112 & .134 / .175 & .135 / .221 & .261 / .307 & .267 / .371 \\
-    \iterMode{} (reference) & .074 / .072 & .088 / .125 & .109 / .157 & .165 / .181 & .244 / .342 \\
+    \scgsOrig{}          & .189 / .269 & .213 / .318 & .237 / .399 & .362 / .439 & .285 / .410 \\
+    \ours{2}             & .174 / .271 & .201 / .285 & .211 / .337 & .344 / .409 & .295 / .421 \\
+    \ours{4}             & .140 / .207 & .169 / .228 & .177 / .258 & .310 / .389 & .285 / .391 \\
+    \ours{8}             & .108 / .112 & .134 / .175 & .135 / .221 & .261 / .307 & .267 / .371 \\
+    \scgsIter{} (slow ref.) & .074 / .072 & .088 / .125 & .109 / .157 & .165 / .181 & .244 / .342 \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -582,11 +605,13 @@ increment at 10--15$^\circ$).
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.98\textwidth]{fig_qualitative_2scene.png}
-  \caption{\textbf{Qualitative comparison at 90$^\circ$} on the easiest-to-see
-  cases: \texttt{jumpingjacks} (thin arm; note the default mode's shredded hand
-  and horizontal under-rotation) and \texttt{trex} (long tail; note the default
-  mode's shortened, kinked tail versus the smooth arcs of $N{=}4/8$ and the
-  reference).}
+  \caption{\textbf{Original SC-GS vs.\ our method at a 90$^\circ$ drag} on the
+  easiest-to-see cases. Columns, left to right: \scgsOrig{}, \ours{4},
+  \ours{8}, \scgsIter{} (reference). Top: \texttt{jumpingjacks} --- the
+  original mode leaves the arm near-horizontal with a shredded hand; our
+  schedules progressively restore the intended lowered pose. Bottom:
+  \texttt{trex} --- the original mode shortens and kinks the tail; ours
+  restores the smooth arc.}
   \label{fig:qualitative}
 \end{figure*}
 
@@ -595,10 +620,10 @@ scenes, each with a different limb, joint, and rotation axis: \texttt{hook}
 (forward arm, axis $X$), \texttt{mutant} (claw arm, axis $Y$),
 \texttt{standup} (crouched forward arm, axis $X$), and \texttt{trex} (long
 thin tail about its root, axis $Z$). On four of five scenes the ordering
-default $>$ $N{=}2$ $>$ $N{=}4$ $>$ $N{=}8$ $>$ reference is \textbf{strictly
-monotone at every tested angle} (Tab.~\ref{tab:crossscene},
-Fig.~\ref{fig:crossscene}); at 90$^\circ$ $N{=}8$ closes 71\% / 63\% / 80\% /
-51\% / 43\% of the default$\rightarrow$reference gap
+\scgsOrig{} $>$ \ours{2} $>$ \ours{4} $>$ \ours{8} $>$ reference is
+\textbf{strictly monotone at every tested angle} (Tab.~\ref{tab:crossscene},
+Fig.~\ref{fig:crossscene}); at 90$^\circ$ \ours{8} closes 71\% / 63\% / 80\% /
+51\% / 43\% of the original$\rightarrow$reference gap
 (Fig.~\ref{fig:onset}b). Artifact \emph{severity} varies with limb geometry
 --- Gaussian stretch p95 at 90$^\circ$ is 10.2 on \texttt{jumpingjacks}' thin
 arm but only 1.6 on \texttt{mutant}'s thick claw --- yet the ordering never
