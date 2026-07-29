@@ -80,5 +80,6 @@ result). Seeds are fixed (upstream seed 0); protocol constants are recorded in
 - `docs/REPRODUCTION.md` — Phase 1 tables (paper vs ours), costs
 - `docs/FAILURE_ANALYSIS.md` — Failures A & B, full protocols and numbers
 - `docs/IMPROVEMENT.md` — progressive drag scheduling design, ablation, limitations
-- `paper/draft.md` — course report draft (4–8 pages rendered)
+- `paper/paper.tex` → `paper/paper.pdf` — the submitted report (8 pages)
+- `docs/PROOFREADING_GUIDE.md` — claim/evidence map used to proofread the report
 - `docs/AI_USAGE_LOG.md` — generative-AI usage log (course requirement)
