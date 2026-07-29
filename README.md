@@ -1,5 +1,10 @@
 # SC-GS Failure Analysis & Improvement — Visual Media Course Project
 
+**Author**: MENG GUO (48-266606), Department of Creative Informatics,
+Graduate School of Information Science and Technology, The University of Tokyo.
+**Report**: [`paper/paper.pdf`](paper/paper.pdf) · **AI usage log**:
+[`docs/AI_USAGE_LOG.md`](docs/AI_USAGE_LOG.md)
+
 Reproduction, controlled failure analysis, and an improvement of
 **SC-GS: Sparse-Controlled Gaussian Splatting for Editable Dynamic Scenes** (CVPR 2024,
 [official repo](https://github.com/yihua7/SC-GS)) on the D-NeRF dataset.
