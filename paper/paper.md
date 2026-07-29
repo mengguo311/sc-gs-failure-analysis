@@ -1,5 +1,8 @@
 # Progressive Drag Scheduling: Characterizing and Repairing Large-Rotation Editing Failures in Sparse-Controlled Gaussian Splatting
 
+> **Note**: the authoritative, most up-to-date version of this paper is `paper.tex` /
+> `paper.pdf` (LaTeX). This markdown version may lag behind the latest revision.
+
 **Author:** `<TODO: name, student ID, department, laboratory>`
 **Course:** Visual Media, The University of Tokyo
 
@@ -143,7 +146,7 @@ All experiments use the official SC-GS implementation (fixed seed, 80k iteration
 Robustness scales monotonically with N (Table 3, Figure 2): N=8 covers the practical editing range (≤90°) at ≤0.8 s per drag — 16× cheaper than the reference at 135° — and every image metric against the reference improves monotonically in N at every angle (e.g., PSNR at 60°: 18.59 → 19.97 dB; LPIPS at 45°: 0.097 → 0.066). Beyond its onset, each schedule fails exactly like the default mode — the *final* sub-step's increment exceeds what three iterations absorb — implying that N should scale with θ; the onset table yields the simple adaptive rule N = ⌈θ/15°⌉ (fix the per-substep increment at 10–15°).
 
 ![Figure 6](figures/before_after_grid.png)
-*Figure 6 — Qualitative before/after on jumpingjacks (45°/90°/135°). Top to bottom: reference, default mode, progressive N=4, N=8. The default mode's arm under-rotates and its hand shreds from 60°; N=8 tracks the reference through 90°.*
+*Figure 6 — Original SC-GS vs ours, qualitative before/after on jumpingjacks (45°/90°/135°). Top to bottom: SC-GS (original), Ours N=4, Ours N=8, SC-GS iterative (reference). The original mode's arm under-rotates and its hand shreds from 60°; Ours N=8 tracks the reference through 90°.*
 
 ### 6.3 Cross-scene generalization
 
@@ -163,7 +166,7 @@ We repeat the full protocol (5 modes × 11 angles) on four additional scenes, ea
 *Figure 7 — Edge-stretch vs drag angle for all five scenes. The mode ordering is preserved everywhere; absolute levels are scene-dependent.*
 
 ![Figure 8](figures/fig_qualitative_2scene.png)
-*Figure 8 — Qualitative comparison at 90° on the easiest-to-see cases: jumpingjacks (thin arm; note the default mode's shredded hand and horizontal under-rotation) and trex (long tail; note the default mode's shortened, kinked tail versus the smooth arcs of N=4/8 and the reference).*
+*Figure 8 — Original SC-GS vs ours at 90°. Columns left to right: SC-GS (original), Ours N=4, Ours N=8, SC-GS iterative (reference). jumpingjacks: the original mode leaves the arm near-horizontal with a shredded hand. trex: the original mode shortens and kinks the tail; ours restores the smooth arc.*
 
 On four of five scenes the ordering default > N=2 > N=4 > N=8 > reference is **strictly monotone at every tested angle**; at 90° N=8 closes 71% / 63% / 80% / 51% / 43% of the default→reference gap (Figure 5b). Artifact *severity* varies with limb geometry — Gaussian stretch p95 at 90° is 10.2 on jumpingjacks' thin arm but only 1.6 on mutant's thick claw — yet the ordering never inverts, except for one case analyzed next.
 

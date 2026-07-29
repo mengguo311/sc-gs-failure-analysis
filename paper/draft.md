@@ -186,7 +186,9 @@ progressive --steps N`); zero upstream code modified — each sub-step reuses th
 ## 8. Before/After Comparison
 
 ![Before/after grid](figures/before_after_grid.png)
-*Figure 4: reference / from_init / progressive N=4 / N=8 at 45°, 90°, 135°.*
+*Figure 4: SC-GS (original) / Ours N=4 / Ours N=8 / SC-GS iterative (reference), top to
+bottom, at 45°, 90°, 135°. The original mode's arm under-rotates and shreds; our
+schedules restore the reference pose at a fraction of its cost.*
 
 Failure-onset angle (first angle where Gaussian stretch p95 exceeds the visible-artifact
 level ≈ 2; Figure 2b):
