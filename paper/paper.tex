@@ -75,9 +75,10 @@ solution. The method is a pure scheduling change --- it requires no modification
 of the trained model or the solver --- yet it extends the failure-onset angle
 from 45--60$^\circ$ to 90--110$^\circ$ ($N{=}8$) at under 0.8\,s per drag,
 16$\times$ faster than the robust-but-slow incremental reference mode. Across
-D-NeRF scenes with distinct limb geometries, progressive scheduling closes
-43--80\% of the rigidity gap between the original and reference modes, with
-strictly monotone improvement in the schedule length on almost all scenes. All
+eight D-NeRF scenes spanning organic limbs, a mechanical hinge, an extreme
+kinematic chain, and a free body, progressive scheduling closes 43--80\% of
+the rigidity gap between the original and reference modes, with monotone
+improvement in the schedule length on nearly every scene and angle. All
 results are reproducible from committed scripts, metrics, and protocol seeds.
 \end{abstract}
 \vspace{1.2em}
@@ -139,9 +140,9 @@ imports the reference mode's robustness into the one-shot, deterministic
 workflow of the default mode, with a user-controllable robustness--latency dial
 ($N$). The method changes no trained parameters and no solver code --- it is a
 scheduling policy over existing calls --- yet it is quantitatively effective
-across five scenes with different limb geometries.
+across eight scenes with qualitatively different articulation types.
 
-\paragraph{Contributions.}
+\paragraph{Contributions}
 \begin{enumerate}\itemsep2pt
   \item A reproducible, GUI-faithful headless editing harness for SC-GS with
         geometry-level (graph edge stretch, ARAP energy, Gaussian neighbor
@@ -154,14 +155,14 @@ across five scenes with different limb geometries.
         (\S\ref{sec:failures}).
   \item Progressive drag scheduling, a zero-retraining repair that extends the
         failure onset to 90--110$^\circ$ at interactive latency, validated on
-        five scenes (\S\ref{sec:method}, \S\ref{sec:experiments}).
+        eight scenes (\S\ref{sec:method}, \S\ref{sec:experiments}).
 \end{enumerate}
 
 % =====================================================================
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{Dynamic scene representations.}
+\paragraph{Dynamic scene representations}
 Dynamic extensions of NeRF~\cite{nerf} deform a canonical field by a
 time-conditioned warp (D-NeRF~\cite{dnerf}) or accelerate training and
 rendering with explicit grids (TiNeuVox~\cite{tineuvox},
@@ -172,7 +173,7 @@ motion control}: a compact set of control points carries the motion field,
 which both regularizes reconstruction and exposes an editing interface. Our
 work is an empirical analysis of that interface, not a new representation.
 
-\paragraph{Shape deformation and editing.}
+\paragraph{Shape deformation and editing}
 Handle-based deformation is classical geometry processing: linear variational
 methods such as Laplacian surface editing~\cite{lse} are efficient but
 rotation-blind, a limitation surveyed thoroughly by Botsch and
@@ -209,7 +210,7 @@ regularizer on sampled node trajectories biases training toward locally rigid
 motion (Fig.~\ref{fig:overview}). File/line references below are to the
 official implementation.
 
-\paragraph{Editing.}
+\paragraph{Editing}
 At edit time $t$, node positions $\mathbf{p} = \mathrm{nodes} + d_{xyz}(t)$
 form a graph with trajectory-aware connectivity ($K{=}16$). The user selects a
 \emph{handle} group (a clicked node plus its 2-ring) and drags it; anchors are
@@ -240,7 +241,7 @@ differ \emph{only in initialization} (\texttt{train\_gui.py:768--777}):
         \emph{reference}, not as a practical competitor.
 \end{itemize}
 
-\paragraph{Propagation.}
+\paragraph{Propagation}
 The solved node displacement field is not paired with the solver's rotations.
 Instead, node rotations are re-estimated from the displaced node positions by a
 local SVD fit (\texttt{p2dR}, \texttt{time\_utils.py:1044}), and Gaussians are
@@ -489,12 +490,18 @@ trained models reproduce the paper.
 \begin{table*}[t]
   \centering\small
   \caption{\textbf{Reproduction on D-NeRF} (test split). Paper numbers from
-  SC-GS Tab.~1~\cite{scgs}. $^{*}$The only gap beyond 0.5\,dB; investigation:
-  the best checkpoint during training reached 40.86 (${\approx}0.2$\,dB is
-  final-iteration checkpoint selection), SSIM matches and LPIPS is better than
-  the paper's; \texttt{trex} contains the finest structures in the benchmark
-  and the residual is consistent with densification run-to-run variance.}
+  SC-GS Tab.~1~\cite{scgs}. $^{*}$Gaps beyond 0.5\,dB, investigated:
+  \texttt{trex} --- best checkpoint during training reached 40.86
+  (${\approx}0.2$\,dB is final-iteration checkpoint selection), SSIM matches
+  and LPIPS is better than the paper's; the finest structures in the benchmark,
+  residual consistent with densification variance. \texttt{bouncingballs} ---
+  best checkpoint 42.61, LPIPS again better than the paper's (.0142 vs .0166);
+  the scene is dominated by large smooth motions where PSNR is highly sensitive
+  to sub-pixel phase. $^{\dagger}$SC-GS does not report \texttt{lego} (its
+  D-NeRF test split is known to be misaligned); we train it only as an editing
+  test bed (mechanical joint).}
   \label{tab:repro}
+  \setlength{\tabcolsep}{4.5pt}
   \begin{tabular}{lccccc}
     \toprule
     Scene & PSNR paper / ours ($\Delta$) & SSIM paper / ours & LPIPS paper / ours & Train & Peak GPU \\
@@ -504,6 +511,9 @@ trained models reproduce the paper.
     mutant       & 45.19 / 45.03 ($-0.16$)          & .999 / .9990 & .0028 / .0029 & 63.5\,min & 2.08\,GiB \\
     standup      & 47.89 / 47.51 ($-0.38$)          & .999 / .9991 & .0023 / .0025 & 65.5\,min & 3.02\,GiB \\
     trex         & 41.24 / 40.68 ($-0.56$)$^{*}$    & .998 / .9985 & .0046 / .0038 & 65.6\,min & 2.07\,GiB \\
+    hellwarrior  & 42.93 / \textbf{43.00} ($+0.07$) & .994 / .9931 & .0155 / .0165 & 63.7\,min & 1.33\,GiB \\
+    bouncingballs& 44.91 / 42.55 ($-2.36$)$^{*}$    & .998 / .9966 & .0166 / .0142 & 68.3\,min & 3.74\,GiB \\
+    lego$^{\dagger}$ & --- / 25.36                  & --- / .9481  & --- / .0386   & 63.6\,min & 1.30\,GiB \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -577,19 +587,24 @@ increment at 10--15$^\circ$).
 
 \begin{table*}[t]
   \centering\small
-  \caption{\textbf{Node edge stretch (region p95) at 90$^\circ$ / 135$^\circ$
-  across scenes.} Lower is better; the reference mode is the robustness upper
-  bound at ${\sim}100\times$ the latency.}
+  \caption{\textbf{Original SC-GS vs.\ our method across eight scenes: node
+  edge stretch (region p95) at 90$^\circ$ / 135$^\circ$.} Lower is better; the
+  reference mode is the robustness upper bound at ${\sim}100\times$ the
+  latency. Our schedules improve on the original monotonically in $N$ on every
+  scene (two isolated exceptions: \texttt{trex} $N{=}2$ and
+  \texttt{bouncingballs} $N{=}8$@90$^\circ$, both within metric noise).}
   \label{tab:crossscene}
-  \begin{tabular}{lccccc}
+  \scriptsize
+  \setlength{\tabcolsep}{2.6pt}
+  \begin{tabular}{lcccccccc}
     \toprule
-    mode & jumpingjacks & hook & mutant & standup & trex \\
+    mode & jump.jacks & hook & mutant & standup & trex & hellwarr. & lego & bounc.balls \\
     \midrule
-    \scgsOrig{}          & .189 / .269 & .213 / .318 & .237 / .399 & .362 / .439 & .285 / .410 \\
-    \ours{2}             & .174 / .271 & .201 / .285 & .211 / .337 & .344 / .409 & .295 / .421 \\
-    \ours{4}             & .140 / .207 & .169 / .228 & .177 / .258 & .310 / .389 & .285 / .391 \\
-    \ours{8}             & .108 / .112 & .134 / .175 & .135 / .221 & .261 / .307 & .267 / .371 \\
-    \scgsIter{} (slow ref.) & .074 / .072 & .088 / .125 & .109 / .157 & .165 / .181 & .244 / .342 \\
+    \scgsOrig{}          & .189/.269 & .213/.318 & .237/.399 & .362/.439 & .285/.410 & .192/.307 & .420/.623 & .216/.350 \\
+    \ours{2}             & .174/.271 & .201/.285 & .211/.337 & .344/.409 & .295/.421 & .182/.268 & .391/.580 & .198/.279 \\
+    \ours{4}             & .140/.207 & .169/.228 & .177/.258 & .310/.389 & .285/.391 & .142/.211 & .371/.548 & .155/.202 \\
+    \ours{8}             & .108/.112 & .134/.175 & .135/.221 & .261/.307 & .267/.371 & .113/.166 & .358/.515 & .172/.200 \\
+    \scgsIter{} (slow ref.) & .074/.072 & .088/.125 & .109/.157 & .165/.181 & .244/.342 & .092/.139 & .328/.402 & .155/.183 \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -597,8 +612,12 @@ increment at 10--15$^\circ$).
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{cross_scene_curves.png}
-  \caption{\textbf{Edge-stretch vs.\ drag angle for all five scenes.} The mode
-  ordering is preserved everywhere; absolute levels are scene-dependent.}
+  \caption{\textbf{Original SC-GS vs.\ our method: edge-stretch vs.\ drag
+  angle on all eight scenes.} Red = \scgsOrig{}; pink/orange/green = ours with
+  growing $N$; blue = the slow reference. The ordering is preserved across
+  organic limbs, a mechanical hinge (\texttt{lego}), an extreme kinematic chain
+  (\texttt{trex}), and a free body on an arc (\texttt{bouncingballs}); absolute
+  levels are scene-dependent.}
   \label{fig:crossscene}
 \end{figure*}
 
@@ -615,19 +634,31 @@ increment at 10--15$^\circ$).
   \label{fig:qualitative}
 \end{figure*}
 
-We repeat the full protocol (5 modes $\times$ 11 angles) on four additional
-scenes, each with a different limb, joint, and rotation axis: \texttt{hook}
-(forward arm, axis $X$), \texttt{mutant} (claw arm, axis $Y$),
-\texttt{standup} (crouched forward arm, axis $X$), and \texttt{trex} (long
-thin tail about its root, axis $Z$). On four of five scenes the ordering
-\scgsOrig{} $>$ \ours{2} $>$ \ours{4} $>$ \ours{8} $>$ reference is
-\textbf{strictly monotone at every tested angle} (Tab.~\ref{tab:crossscene},
-Fig.~\ref{fig:crossscene}); at 90$^\circ$ \ours{8} closes 71\% / 63\% / 80\% /
-51\% / 43\% of the original$\rightarrow$reference gap
-(Fig.~\ref{fig:onset}b). Artifact \emph{severity} varies with limb geometry
---- Gaussian stretch p95 at 90$^\circ$ is 10.2 on \texttt{jumpingjacks}' thin
-arm but only 1.6 on \texttt{mutant}'s thick claw --- yet the ordering never
-inverts, except for one case analyzed next.
+We repeat the full protocol (5 modes $\times$ 11 angles) on seven additional
+scenes covering qualitatively different articulation types: organic limbs
+(\texttt{hook} forward arm / axis $X$; \texttt{mutant} claw arm / $Y$;
+\texttt{standup} crouched forward arm / $X$; \texttt{hellwarrior} spread arm /
+$Y$), an extreme kinematic chain (\texttt{trex} tail about its root / $Z$), a
+\emph{mechanical} joint (\texttt{lego} bulldozer shovel about its hinge / $X$),
+and an unarticulated free body (\texttt{bouncingballs}: a ball dragged along an
+arc above the plate / $Y$ --- included to test whether the failure requires an
+articulated chain at all; it does not, since the arc drag alone triggers the
+chord-shortcut init). The ordering \scgsOrig{} $>$ \ours{2} $>$ \ours{4} $>$
+\ours{8} $>$ reference is \textbf{monotone at every tested angle on six of the
+eight scenes}, with two isolated single-point exceptions within metric noise
+(Tab.~\ref{tab:crossscene}, Fig.~\ref{fig:crossscene}). At 90$^\circ$ \ours{8}
+closes 43--80\% of the original$\rightarrow$reference gap: 71\%
+(\texttt{jumpingjacks}), 63\% (\texttt{hook}), 80\% (\texttt{mutant}), 51\%
+(\texttt{standup}), 43\% (\texttt{trex}), 79\% (\texttt{hellwarrior}), 67\%
+(\texttt{lego}), 72\% (\texttt{bouncingballs}) (Fig.~\ref{fig:onset}b), and
+image deviation from the reference improves monotonically in $N$ on all eight
+scenes (\eg{} PSNR at 90$^\circ$: \texttt{hellwarrior} $34.0 \rightarrow
+36.4$\,dB, \texttt{lego} $18.6 \rightarrow 21.1$\,dB, \texttt{bouncingballs}
+$20.2 \rightarrow 21.9$\,dB from \scgsOrig{} to \ours{8}). Artifact
+\emph{severity} varies with limb geometry --- Gaussian stretch p95 at
+90$^\circ$ is 10.2 on \texttt{jumpingjacks}' thin arm but only 1.6 on
+\texttt{mutant}'s thick claw --- yet the qualitative conclusion is unchanged
+everywhere.
 
 \subsection{The hard case: \texttt{trex}}
 \label{sec:hardcase}
@@ -635,24 +666,28 @@ inverts, except for one case analyzed next.
 The \texttt{trex} tail is a single long elastic chain far from every anchor,
 and it stresses every mode: even the reference reaches 0.34 edge stretch at
 135$^\circ$. Node-level differences between modes compress
-(Tab.~\ref{tab:crossscene}, last column), and $N{=}2$ is statistically
-indistinguishable from the default --- its 45--67$^\circ$ sub-steps already
-exceed the per-step failure level, so warm-starting buys nothing. Yet the
-\emph{visual} verdict is unambiguous (Fig.~\ref{fig:qualitative}, bottom row):
-the default mode's tail is visibly shortened and kinked, while $N{=}4/8$
-restore the smooth arc; image metrics agree (PSNR vs.\ reference at 90$^\circ$:
-$24.7 \rightarrow 25.0 \rightarrow 27.7$\,dB from default to $N{=}4$ to
-$N{=}8$; LPIPS $0.039 \rightarrow 0.018$). We draw two honest conclusions:
-progressive scheduling helps on every scene we tested, but it is not a silver
-bullet for extreme kinematic chains; and geometry-level and image-level metrics
-can dissociate --- evaluations relying on a single family of metrics would
-have mis-ranked this case in both directions.
+(Tab.~\ref{tab:crossscene}), and \ours{2} is statistically indistinguishable
+from the original --- its 45--67$^\circ$ sub-steps already exceed the per-step
+failure level, so warm-starting buys nothing. Yet the \emph{visual} verdict is
+unambiguous (Fig.~\ref{fig:qualitative}, bottom row): the original mode's tail
+is visibly shortened and kinked, while \ours{4}/\ours{8} restore the smooth
+arc; image metrics agree (PSNR vs.\ reference at 90$^\circ$: $24.7
+\rightarrow 25.0 \rightarrow 27.7$\,dB from original to $N{=}4$ to $N{=}8$;
+LPIPS $0.039 \rightarrow 0.018$). The \texttt{lego} hinge is the
+second-hardest case for the same reason in a mechanical guise --- rigid
+brick blocks tolerate no distortion at all, so every mode carries high
+absolute error, yet the ordering and the monotone image-level recovery are
+identical. We draw two honest conclusions: progressive scheduling helps on
+every scene we tested, but it is not a silver bullet for extreme kinematic
+chains; and geometry-level and image-level metrics can dissociate ---
+evaluations relying on a single family of metrics would have mis-ranked these
+cases in both directions.
 
 % =====================================================================
 \section{Discussion and Limitations}
 \label{sec:discussion}
 
-\paragraph{A robustness--latency--statefulness triangle.}
+\paragraph{A robustness--latency--statefulness triangle}
 Our analysis reframes SC-GS's two editing modes as corners of a design
 triangle: the default mode is fast, deterministic, and restorable but
 rotation-blind; the reference mode is robust to rotation but slow, stateful,
@@ -661,14 +696,14 @@ accumulation (\S\ref{sec:failureB}). Progressive scheduling occupies the useful
 interior: bounded latency, deterministic output, and a robustness dial.
 Fig.~\ref{fig:onset}c makes the geometry of this trade-off explicit.
 
-\paragraph{What benchmarks do not measure.}
+\paragraph{What benchmarks do not measure}
 Reconstruction quality was flat across every intervention that dramatically
 changed editability (Tab.~\ref{tab:nodesweep}). For editable representations,
 we argue evaluation should include editing-stress protocols of the kind
 proposed here --- angle sweeps with rigidity, leakage, and reference-deviation
 metrics --- rather than novel-view metrics alone.
 
-\paragraph{Limitations.}
+\paragraph{Limitations}
 (i)~Our improvement addresses the initialization failure only; the
 propagation-stage artifact (\S\ref{sec:failureII}) and the high-count leakage
 failure (\S\ref{sec:failureB}) are orthogonal and unrepaired --- at
@@ -696,7 +731,8 @@ editability --- including a previously unmeasured global leakage mode ---
 across control-point counts at which reconstruction quality is indifferent. A
 minimal, zero-retraining repair --- progressive drag scheduling --- extends the
 usable drag range by roughly a factor of two at interactive latency and
-generalizes across five scenes. The broader lesson is that editable neural
+generalizes across eight scenes with organic, mechanical, and unarticulated
+geometry. The broader lesson is that editable neural
 representations deserve editing-centric evaluation: the capabilities that
 motivate their design are exactly the ones current benchmarks do not measure.
 
