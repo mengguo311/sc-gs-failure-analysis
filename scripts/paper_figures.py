@@ -151,9 +151,9 @@ rows_spec = [
     ('jumpingjacks', 0, (20, 330, 60, 380), 'jumpingjacks: arm 90°'),
     ('trex', 3, (60, 360, 40, 420), 'trex: tail 90°'),
 ]
-mode_cols = [('from_init', LABEL['from_init']), ('progressive_N4', LABEL['progressive_N4']),
-             ('progressive_N8', LABEL['progressive_N8']), ('iterative', LABEL['iterative'])]
-fig, axes = plt.subplots(len(rows_spec), len(mode_cols), figsize=(3.6*len(mode_cols), 3.9*len(rows_spec)))
+mode_cols = [('from_init', 'SC-GS (original)'), ('progressive_N8', 'Ours (N=8)'),
+             ('iterative', 'SC-GS iter. (ref.)')]
+fig, axes = plt.subplots(len(rows_spec), len(mode_cols), figsize=(2.7*len(mode_cols), 2.9*len(rows_spec)))
 for r, (scene, cam, crop, rlabel) in enumerate(rows_spec):
     for c, (m, clabel) in enumerate(mode_cols):
         img = imageio.imread(f'results/failureA/{scene}/renders/{m}_a090_cam{cam}.png')[..., :3]
@@ -161,21 +161,21 @@ for r, (scene, cam, crop, rlabel) in enumerate(rows_spec):
         axes[r][c].imshow(img[y0:y1, x0:x1])
         axes[r][c].axis('off')
         if r == 0:
-            axes[r][c].set_title(clabel, fontsize=12)
-    axes[r][0].text(-0.07, 0.5, rlabel, transform=axes[r][0].transAxes, rotation=90,
-                    va='center', ha='center', fontsize=11)
-plt.tight_layout()
-plt.savefig(f'{OUT}/fig_qualitative_2scene.png', dpi=140, bbox_inches='tight')
+            axes[r][c].set_title(clabel, fontsize=11)
+    axes[r][0].text(-0.06, 0.5, rlabel, transform=axes[r][0].transAxes, rotation=90,
+                    va='center', ha='center', fontsize=10)
+plt.subplots_adjust(wspace=0.02, hspace=0.02)
+plt.savefig(f'{OUT}/fig_qualitative_2scene.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('qualitative done')
 
 # ------------------------------------------------------------- before/after grid
 base = 'results/failureA/jumpingjacks/renders/'
-grid_modes = [('from_init', LABEL['from_init']), ('progressive_N4', LABEL['progressive_N4']),
-              ('progressive_N8', LABEL['progressive_N8']), ('iterative', LABEL['iterative'])]
+grid_modes = [('from_init', LABEL['from_init']), ('progressive_N8', LABEL['progressive_N8']),
+              ('iterative', LABEL['iterative'])]
 angles = ['045', '090', '135']
 fig, axes = plt.subplots(len(grid_modes), len(angles),
-                         figsize=(3.4*len(angles), 3.6*len(grid_modes)))
+                         figsize=(3.2*len(angles), 3.35*len(grid_modes)))
 for r, (m, label) in enumerate(grid_modes):
     for c, a in enumerate(angles):
         img = imageio.imread(base + f'{m}_a{a}_cam0.png')[..., :3][20:330, 60:380]

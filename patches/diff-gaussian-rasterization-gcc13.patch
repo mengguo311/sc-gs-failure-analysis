@@ -1,0 +1,25 @@
+From 7a0f7470ca9f1f886389c204016e9aed2ad46a89 Mon Sep 17 00:00:00 2001
+From: Lecheng Wang <wanglecheng1101@gmail.com>
+Date: Mon, 27 Jul 2026 19:26:16 +0900
+Subject: [PATCH] Fix gcc-13 build: add missing cstdint/cstddef includes
+
+---
+ cuda_rasterizer/rasterizer_impl.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/cuda_rasterizer/rasterizer_impl.h b/cuda_rasterizer/rasterizer_impl.h
+index ff2d117..ff4fc74 100644
+--- a/cuda_rasterizer/rasterizer_impl.h
++++ b/cuda_rasterizer/rasterizer_impl.h
+@@ -13,6 +13,8 @@
+ 
+ #include <iostream>
+ #include <vector>
++#include <cstdint>
++#include <cstddef>
+ #include "rasterizer.h"
+ #include <cuda_runtime_api.h>
+ 
+-- 
+2.43.0
+

@@ -25,7 +25,7 @@ args = ap.parse_args()
 rows = []
 ncols = min(4, len(args.scenes))
 nrows = (len(args.scenes) + ncols - 1) // ncols
-fig, axes_grid = plt.subplots(nrows, ncols, figsize=(4.6 * ncols, 4.1 * nrows), squeeze=False)
+fig, axes_grid = plt.subplots(nrows, ncols, figsize=(3.3 * ncols, 2.45 * nrows), squeeze=False)
 axes = [[axes_grid[i // ncols][i % ncols] for i in range(len(args.scenes))]]
 for i in range(len(args.scenes), nrows * ncols):
     axes_grid[i // ncols][i % ncols].axis('off')

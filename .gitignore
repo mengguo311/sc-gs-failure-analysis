@@ -16,3 +16,6 @@ dist/
 # Misc
 .ipynb_checkpoints/
 *.log
+
+# Upstream SC-GS is cloned by scripts/setup_upstream.sh, not vendored here
+SC-GS/

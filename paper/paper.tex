@@ -25,6 +25,14 @@
 \graphicspath{{figures/}}
 \setlength{\columnsep}{0.28in}
 
+% Allow several floats per page top so figure-dense sections do not spill pages.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{4}
+\setcounter{totalnumber}{6}
+
 \newcommand{\fromInit}{\texttt{arap\_from\_init}}
 \newcommand{\iterMode}{\texttt{arap\_iterative}}
 % Contrastive naming used in all figures, tables, and text:
@@ -35,6 +43,7 @@
 \newcommand{\ours}[1]{Ours ($N{=}#1$)}
 \newcommand{\scgsIter}{SC-GS iterative}
 \newcommand{\eg}{\emph{e.g.}}
+\newcommand{\etal}{\emph{et al.}}
 \newcommand{\ie}{\emph{i.e.}}
 
 \title{\LARGE\bf Progressive Drag Scheduling: Characterizing and Repairing\\
@@ -42,8 +51,10 @@ Large-Rotation Editing Failures in Sparse-Controlled Gaussian Splatting}
 
 \author{%
   \textit{$\langle$TODO: name, student ID$\rangle$}\\
-  \textit{$\langle$TODO: department, laboratory$\rangle$}\\
-  Visual Media, The University of Tokyo}
+  \textit{$\langle$TODO: department / major, laboratory$\rangle$}\\
+  \textit{Own research topic: $\langle$TODO$\rangle$}\\
+  Visual Media, The University of Tokyo\\[2pt]
+  \small Code: \url{https://github.com/<TODO-user>/sc-gs-failure-analysis}}
 
 \date{}
 
@@ -80,8 +91,13 @@ kinematic chain, and a free body, progressive scheduling closes 43--80\% of
 the rigidity gap between the original and reference modes, with monotone
 improvement in the schedule length on nearly every scene and angle. All
 results are reproducible from committed scripts, metrics, and protocol seeds.
+
+\vspace{0.6em}
+\noindent\textbf{Keywords:} dynamic scene reconstruction; 3D Gaussian splatting;
+sparse control points; as-rigid-as-possible deformation; interactive shape
+editing; failure analysis; warm-start scheduling.
 \end{abstract}
-\vspace{1.2em}
+\vspace{1.0em}
 }]
 
 % =====================================================================
@@ -159,40 +175,72 @@ across eight scenes with qualitatively different articulation types.
 \end{enumerate}
 
 % =====================================================================
+\section{Summary of the Target Paper}
+\label{sec:summary}
+
+\textbf{Target paper.} Y.-H.~Huang \etal, \emph{SC-GS: Sparse-Controlled
+Gaussian Splatting for Editable Dynamic Scenes}, CVPR 2024~\cite{scgs};
+official implementation at \url{https://github.com/yihua7/SC-GS}.
+
+\textbf{Problem.} Given a monocular video of a dynamic scene, reconstruct it so
+that it can be both rendered from novel views at novel times \emph{and} edited
+by a user. Prior dynamic representations optimize a dense per-point or
+per-voxel motion field, which reconstructs well but offers no compact handle
+for a person to manipulate.
+
+\textbf{Key idea.} Decouple \emph{appearance} from \emph{motion}. Appearance is
+carried by dense canonical 3D Gaussians; motion is carried by a few hundred
+learned \emph{control points}, each driven by a time-conditioned MLP. Every
+Gaussian follows its nearest control points through linear blend skinning with
+learned weights, and an as-rigid-as-possible regularizer on control-point
+trajectories keeps the motion field locally rigid. Because the motion field is
+sparse, editing becomes a classical handle-based deformation problem: the user
+constrains a few control points and an ARAP solve propagates the deformation to
+the rest, which the skinning stage then transfers to all Gaussians.
+
+\textbf{Reported results.} On the D-NeRF synthetic benchmark SC-GS reports
+43.31\,dB PSNR / .997 SSIM / .0063 LPIPS averaged over eight scenes, exceeding
+contemporaneous dynamic NeRF and 3DGS baselines, at real-time rendering rates;
+qualitatively it demonstrates interactive drag-based motion editing that
+earlier dynamic representations do not support.
+
+\textbf{Why we chose it.} The paper's central selling point --- editability ---
+is exactly the property its quantitative evaluation does not measure. That gap
+is what this report investigates.
+
+% =====================================================================
 \section{Related Work}
 \label{sec:related}
 
 \paragraph{Dynamic scene representations}
-Dynamic extensions of NeRF~\cite{nerf} deform a canonical field by a
-time-conditioned warp (D-NeRF~\cite{dnerf}) or accelerate training and
-rendering with explicit grids (TiNeuVox~\cite{tineuvox},
-K-Planes~\cite{kplanes}). On the splatting side, deformable 3DGS
-variants~\cite{deformable3dgs} and 4D Gaussian fields~\cite{4dgs} achieve
-real-time dynamic rendering. SC-GS~\cite{scgs} is distinguished by \emph{sparse
-motion control}: a compact set of control points carries the motion field,
-which both regularizes reconstruction and exposes an editing interface. Our
-work is an empirical analysis of that interface, not a new representation.
+Dynamic NeRF variants deform a canonical field by a time-conditioned warp
+(D-NeRF~\cite{dnerf}) or accelerate it with explicit grids
+(TiNeuVox~\cite{tineuvox}, K-Planes~\cite{kplanes}); on the splatting side,
+deformable 3DGS~\cite{deformable3dgs} and 4D Gaussian fields~\cite{4dgs} render
+dynamic scenes in real time. SC-GS~\cite{scgs} is distinguished by \emph{sparse
+motion control}, which both regularizes reconstruction and exposes an editing
+interface. Our work analyses that interface rather than proposing a new
+representation.
 
 \paragraph{Shape deformation and editing}
 Handle-based deformation is classical geometry processing: linear variational
 methods such as Laplacian surface editing~\cite{lse} are efficient but
-rotation-blind, a limitation surveyed thoroughly by Botsch and
-Sorkine~\cite{botsch}; ARAP energies~\cite{arap} restore rotation invariance
-via alternating local rotation fitting and global linear solves, and embedded
-deformation graphs~\cite{embedded} extend the idea to volumetric proxies ---
-precisely the construction SC-GS adopts over control points. The failure we
+rotation-blind~\cite{botsch}; ARAP energies~\cite{arap} restore rotation
+invariance by alternating local rotation fitting with global linear solves, and
+embedded deformation graphs~\cite{embedded} extend this to volumetric proxies
+--- precisely the construction SC-GS adopts. The failure we
 characterize is a \emph{system-level composition} of known ingredients: a
 linear initializer, a hard iteration budget, and an LBS propagation stage that
 re-estimates rotations from positions; to our knowledge its quantitative
 behavior in SC-GS had not been documented.
 
 % =====================================================================
-\section{Preliminaries: the SC-GS Editing Pipeline}
+\section{Understanding the Method: the SC-GS Editing Pipeline}
 \label{sec:prelim}
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{method_overview.png}
+  \includegraphics[width=0.90\textwidth]{method_overview.png}
   \caption{\textbf{SC-GS at a glance.} (a)~Dense canonical Gaussians carry
   appearance (\texttt{jumpingjacks}, 70{,}951 Gaussians). (b)~512 sparse
   control nodes carry motion; editing constrains a drag-handle group (red, here
@@ -300,7 +348,7 @@ serialized to JSON alongside the committed metric CSVs.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{failureA_curves.png}
+  \includegraphics[width=0.95\textwidth]{failureA_curves.png}
   \caption{\textbf{Original SC-GS vs.\ our method under shoulder-rotation
   drags} (\texttt{jumpingjacks}). (a)~Node-graph rigidity violation vs.\ drag
   angle. (b)~Gaussian-level tearing after LBS propagation (log scale); the
@@ -319,7 +367,7 @@ $1.70 \rightarrow 9.98$ while the reference stays below $0.3$ --- a six-fold
 discontinuity that localizes the \textbf{failure onset to 45--60$^\circ$}. At
 135$^\circ$ the node edge stretch reaches $3.8\times$ the reference (0.269 vs.\
 0.072) and the ARAP energy is doubled (0.093 vs.\ 0.048). Visually
-(Fig.~\ref{fig:beforeafter}, top row) the limb \emph{under-rotates} --- at
+(Fig.~\ref{fig:qualitative}, top row) the limb \emph{under-rotates} --- at
 90--135$^\circ$ the arm remains near-horizontal instead of following the arc
 --- \emph{shortens} toward the chord, and the hand \emph{shreds} into a blob of
 disconnected Gaussians.
@@ -356,7 +404,7 @@ a distinct failure axis.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{failureB_curves.png}
+  \includegraphics[width=0.95\textwidth]{failureB_curves.png}
   \caption{\textbf{Control-point count sweep on \texttt{jumpingjacks}}
   ($M \in \{64, 128, 512, 1024, 2048\}$, identical training). (a)~Test PSNR is
   flat while render FPS falls 28\%. (b)~Edit rigidity is U-shaped.
@@ -421,7 +469,7 @@ fails at both extremes:
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.92\textwidth]{fig_method_schematic.png}
+  \includegraphics[width=0.82\textwidth]{fig_method_schematic.png}
   \caption{\textbf{Why one-shot solves fail and progressive scheduling repairs
   them.} (a)~The linear initialization moves free nodes along the chord toward
   the target, shortening and shearing the limb; three ARAP iterations cannot
@@ -478,7 +526,7 @@ ${\sim}$10-line loop.
 \section{Experiments}
 \label{sec:experiments}
 
-\subsection{Setup and reproduction}
+\subsection{Execution environment and reproduction}
 \label{sec:setup}
 
 All experiments use the official SC-GS implementation (fixed seed, 80k
@@ -523,7 +571,7 @@ trained models reproduce the paper.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{fig_onset_gapclosure.png}
+  \includegraphics[width=0.95\textwidth]{fig_onset_gapclosure.png}
   \caption{\textbf{How far our method moves SC-GS toward its robustness upper
   bound.} (a)~Failure-onset angle grows with schedule length $N$: from
   45--60$^\circ$ for \scgsOrig{} to 90--110$^\circ$ for \ours{8} (bars: onset
@@ -571,15 +619,16 @@ implying that $N$ should scale with $\theta$; the onset table yields the simple
 adaptive rule $N = \lceil \theta / 15^\circ \rceil$ (fix the per-substep
 increment at 10--15$^\circ$).
 
-\begin{figure}[t]
+\begin{figure}[!htb]
   \centering
-  \includegraphics[width=\linewidth]{before_after_grid.png}
-  \caption{\textbf{Original SC-GS vs.\ our method, qualitative before/after}
-  (\texttt{jumpingjacks}, 45$^\circ$/90$^\circ$/135$^\circ$). Top to bottom:
-  \scgsOrig{}, \ours{4}, \ours{8}, \scgsIter{} (reference). The original
-  mode's arm under-rotates and its hand shreds from 60$^\circ$; \ours{8}
-  tracks the reference through 90$^\circ$ at 1/16 of its cost.}
-  \label{fig:beforeafter}
+  \includegraphics[width=\linewidth]{fig_qualitative_2scene.png}
+  \caption{\textbf{Original SC-GS vs.\ our method at a 90$^\circ$ drag} on the
+  easiest-to-see cases. Top: \texttt{jumpingjacks} --- the original mode leaves
+  the arm near-horizontal with a shredded hand; ours restores the intended
+  lowered pose. Bottom: \texttt{trex} --- the original mode shortens and kinks
+  the tail; ours restores the smooth arc. Per-angle grids for all eight scenes
+  are in the repository.}
+  \label{fig:qualitative}
 \end{figure}
 
 \subsection{Cross-scene generalization}
@@ -609,30 +658,7 @@ increment at 10--15$^\circ$).
   \end{tabular}
 \end{table*}
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{cross_scene_curves.png}
-  \caption{\textbf{Original SC-GS vs.\ our method: edge-stretch vs.\ drag
-  angle on all eight scenes.} Red = \scgsOrig{}; pink/orange/green = ours with
-  growing $N$; blue = the slow reference. The ordering is preserved across
-  organic limbs, a mechanical hinge (\texttt{lego}), an extreme kinematic chain
-  (\texttt{trex}), and a free body on an arc (\texttt{bouncingballs}); absolute
-  levels are scene-dependent.}
-  \label{fig:crossscene}
-\end{figure*}
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.98\textwidth]{fig_qualitative_2scene.png}
-  \caption{\textbf{Original SC-GS vs.\ our method at a 90$^\circ$ drag} on the
-  easiest-to-see cases. Columns, left to right: \scgsOrig{}, \ours{4},
-  \ours{8}, \scgsIter{} (reference). Top: \texttt{jumpingjacks} --- the
-  original mode leaves the arm near-horizontal with a shredded hand; our
-  schedules progressively restore the intended lowered pose. Bottom:
-  \texttt{trex} --- the original mode shortens and kinks the tail; ours
-  restores the smooth arc.}
-  \label{fig:qualitative}
-\end{figure*}
 
 We repeat the full protocol (5 modes $\times$ 11 angles) on seven additional
 scenes covering qualitatively different articulation types: organic limbs
@@ -646,7 +672,8 @@ articulated chain at all; it does not, since the arc drag alone triggers the
 chord-shortcut init). The ordering \scgsOrig{} $>$ \ours{2} $>$ \ours{4} $>$
 \ours{8} $>$ reference is \textbf{monotone at every tested angle on six of the
 eight scenes}, with two isolated single-point exceptions within metric noise
-(Tab.~\ref{tab:crossscene}, Fig.~\ref{fig:crossscene}). At 90$^\circ$ \ours{8}
+(Tab.~\ref{tab:crossscene}; per-scene curves for all
+eight scenes are in the repository). At 90$^\circ$ \ours{8}
 closes 43--80\% of the original$\rightarrow$reference gap: 71\%
 (\texttt{jumpingjacks}), 63\% (\texttt{hook}), 80\% (\texttt{mutant}), 51\%
 (\texttt{standup}), 43\% (\texttt{trex}), 79\% (\texttt{hellwarrior}), 67\%
@@ -719,6 +746,25 @@ would strengthen external validity. (iv)~The reference mode is a strong
 baseline, not ground truth --- it drifts at extreme angles and leaks at high
 node counts.
 
+\paragraph{Reproducibility}
+Every experiment derives from a committed artifact: one script per experiment,
+29 dated entries in an experiment log, metric CSVs and figures under
+\texttt{results/}, and per-protocol JSON seed files (drag points, anchors,
+rotation centers/axes, cameras). Each figure and table here is regenerated by a
+single documented command (repository README). Training uses the upstream fixed
+seed; residual nondeterminism is limited to rasterizer atomics during
+densification.
+
+\paragraph{Use of generative AI}
+Claude Code (Anthropic Fable~5) was used as a research-engineering assistant
+for environment setup, code reading, experiment scripting and execution, figure
+generation, and draft text; the running log of tools, purposes, and
+human-revised parts is \texttt{docs/AI\_USAGE\_LOG.md} in the repository. All
+quantitative claims are machine-generated from the committed measurement CSVs
+rather than written by hand, and all protocol choices are serialized alongside
+the results. The author reviewed and revised the content and is responsible for
+it.
+
 % =====================================================================
 \section{Conclusion}
 \label{sec:conclusion}
@@ -737,7 +783,7 @@ representations deserve editing-centric evaluation: the capabilities that
 motivate their design are exactly the ones current benchmarks do not measure.
 
 % =====================================================================
-\begin{thebibliography}{13}\small
+\begin{thebibliography}{13}\footnotesize\setlength{\itemsep}{1pt}
 
 \bibitem{scgs}
 Y.-H.~Huang, Y.-T.~Sun, Z.~Yang, X.~Lyu, Y.-P.~Cao, and X.~Qi.
@@ -805,31 +851,5 @@ M.~Botsch and O.~Sorkine.
 \newblock \emph{IEEE Trans.\ Vis.\ Comput.\ Graph.}, 14(1):213--230, 2008.
 
 \end{thebibliography}
-
-% =====================================================================
-\appendix
-
-\section{Reproducibility Statement}
-\label{app:repro}
-
-All experiments derive from committed artifacts: one script per experiment
-(\texttt{scripts/}), per-run entries in an experiment log (24 entries), metric
-CSVs and figures under \texttt{results/}, and per-protocol JSON seed files
-(drag points, anchors, rotation centers/axes, cameras). Every figure and table
-in this paper is regenerated by a single documented command (repository
-README). Training uses the upstream fixed seed; residual nondeterminism is
-limited to rasterizer atomics during densification. Environment: Ubuntu 24.04,
-Quadro RTX~5000 (16\,GB), CUDA 12.4, PyTorch 2.4.1, pytorch3d 0.7.8; full
-setup including build fixes in \texttt{docs/SETUP.md}.
-
-\section{Use of Generative AI}
-\label{app:ai}
-
-This project was executed with Claude Code (Anthropic Fable~5) as an autonomous
-research agent under a human-authored brief. All quantitative claims are
-machine-generated from committed measurement CSVs; protocol choices are
-serialized alongside results; the running usage log is
-\texttt{docs/AI\_USAGE\_LOG.md}. The human author is responsible for the final
-content.
 
 \end{document}
