@@ -19,3 +19,6 @@ dist/
 
 # Upstream SC-GS is cloned by scripts/setup_upstream.sh, not vendored here
 SC-GS/
+
+# LaTeX source bundle is generated on demand, not tracked
+paper/paper-latex.zip
