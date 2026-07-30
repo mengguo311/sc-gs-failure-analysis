@@ -2,8 +2,9 @@
 
 **Author**: MENG GUO (48-266606), Department of Creative Informatics,
 Graduate School of Information Science and Technology, The University of Tokyo.
-**Report**: [`paper/paper.pdf`](paper/paper.pdf) · **AI usage log**:
-[`docs/AI_USAGE_LOG.md`](docs/AI_USAGE_LOG.md)
+This repository holds the code, experiment scripts, and measured results. The written
+report and its generative-AI usage log are submitted separately through the course
+system and are not published here.
 
 Reproduction, controlled failure analysis, and an improvement of
 **SC-GS: Sparse-Controlled Gaussian Splatting for Editable Dynamic Scenes** (CVPR 2024,
@@ -38,8 +39,7 @@ Reproduction, controlled failure analysis, and an improvement of
 │   ├── failureA/           rotation-failure study (+ _centroid supplementary)
 │   └── failureB/           node-count study (fps.csv, leakage.csv, edit_n*/)
 ├── docs/                   SETUP, METHOD_NOTES, REPRODUCTION, FAILURE_ANALYSIS,
-│                           IMPROVEMENT, EXPERIMENT_LOG, AI_USAGE_LOG, STATUS
-├── paper/                  draft.md + figures/
+│                           IMPROVEMENT, EXPERIMENT_LOG
 ├── data/                   D-NeRF dataset (not committed)
 └── outputs/                trained models + logs (not committed)
 ```
@@ -88,6 +88,5 @@ result). Seeds are fixed (upstream seed 0); protocol constants are recorded in
 - `docs/REPRODUCTION.md` — Phase 1 tables (paper vs ours), costs
 - `docs/FAILURE_ANALYSIS.md` — Failures A & B, full protocols and numbers
 - `docs/IMPROVEMENT.md` — progressive drag scheduling design, ablation, limitations
-- `paper/paper.tex` → `paper/paper.pdf` — the submitted report (8 pages)
-- `docs/PROOFREADING_GUIDE.md` — claim/evidence map used to proofread the report
-- `docs/AI_USAGE_LOG.md` — generative-AI usage log (course requirement)
+- `docs/METHOD_NOTES.md` — code-verified reading of the SC-GS editing/ARAP pipeline
+- `docs/EXPERIMENT_LOG.md` — every run: date, command, output path, result
