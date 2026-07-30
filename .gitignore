@@ -23,8 +23,8 @@ SC-GS/
 # LaTeX source bundle is generated on demand, not tracked
 paper/paper-latex.zip
 
-# Report authoring artifacts: kept locally for course submission, not published
+# Report authoring artifacts: kept locally, not published
 paper/
-docs/AI_USAGE_LOG.md
-docs/PROOFREADING_GUIDE.md
+docs/AI_*.md
+docs/PROOFREADING_*.md
 docs/STATUS.md

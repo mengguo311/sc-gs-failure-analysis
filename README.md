@@ -2,9 +2,9 @@
 
 **Author**: MENG GUO (48-266606), Department of Creative Informatics,
 Graduate School of Information Science and Technology, The University of Tokyo.
-This repository holds the code, experiment scripts, and measured results. The written
-report and its generative-AI usage log are submitted separately through the course
-system and are not published here.
+This repository holds the code, experiment scripts, and measured results for the
+project. The written report is submitted separately through the course system and is
+not published here.
 
 Reproduction, controlled failure analysis, and an improvement of
 **SC-GS: Sparse-Controlled Gaussian Splatting for Editable Dynamic Scenes** (CVPR 2024,
